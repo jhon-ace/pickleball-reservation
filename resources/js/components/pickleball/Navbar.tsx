@@ -14,20 +14,18 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
     };
 
     return (
-        <nav className="fixed top-0 right-0 left-0 z-50 border-b border-border/50 bg-gradient-to-b from-[#f5f0e6] to-[#e8dfd0] shadow-md backdrop-blur-lg">
+        <nav className="fixed top-0 right-0 left-0 z-50 bg-gradient-to-b from-[#f5f0e6]/80 to-[#e8dfd0]/70 shadow-md backdrop-blur-lg">
             <div className="container mx-auto px-4 md:px-8">
-                <div className="flex h-20 items-center justify-between py-4">
-                    {/* Logo */}
+                <div className="flex h-16 items-center justify-between py-4">
                     <a
                         href="/"
-                        className="font-display flex flex-col items-start gap-1 font-bold text-foreground md:flex-row md:items-center md:gap-2"
+                        className="font-display flex flex-col items-start gap-1 text-foreground md:flex-row md:items-center md:gap-2"
                     >
-                        <span className="text-gradient text-black sm:text-base md:text-lg lg:text-lg">
+                        <span className="text-gradient tracking-wider text-black sm:text-base md:text-lg lg:text-lg">
                             Picklora: Pickleball Court Reservation System
                         </span>
                     </a>
 
-                    {/* Desktop Nav */}
                     <div className="hidden items-center gap-6 md:flex">
                         <a
                             href="#booking"
@@ -97,7 +95,6 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                         </Button>
                     </div>
 
-                    {/* Mobile Toggle */}
                     <button
                         className="p-2 text-black md:hidden"
                         onClick={() => setOpen(!open)}
@@ -107,7 +104,6 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                 </div>
             </div>
 
-            {/* Mobile Menu */}
             <AnimatePresence>
                 {open && (
                     <motion.div
