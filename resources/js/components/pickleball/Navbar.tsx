@@ -107,7 +107,7 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
             <AnimatePresence>
                 {open && (
                     <motion.div
-                        className="overflow-hidden rounded-b-md bg-background shadow-md md:hidden"
+                        className="overflow-hidden rounded-b-md bg-white shadow-md md:hidden"
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
@@ -120,7 +120,7 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                             opacity: { duration: 0.2 },
                         }}
                     >
-                        <div className="flex flex-col gap-4 px-4 py-6">
+                        <div className="flex flex-col gap-4 px-4 py-6 text-center">
                             <a
                                 href="#booking"
                                 className="text-sm text-black hover:underline"
@@ -180,7 +180,7 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="w-full justify-start"
+                                    className="flex w-full justify-center"
                                     onClick={() => router.visit('/auth')}
                                 >
                                     <User className="mr-1 h-4 w-4" /> Sign In

@@ -22,7 +22,7 @@ const HeroSection = ({ onBookNow }: { onBookNow: () => void }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.7 }}
                     >
-                        <span className="mb-6 inline-block rounded-full bg-yellow-500 px-4 py-1.5 text-sm font-medium text-black">
+                        <span className="mt-10 inline-block rounded-full bg-yellow-500 px-4 py-1.5 text-sm font-medium text-black">
                             🏓 Book Your Court Today
                         </span>
                     </motion.div>
