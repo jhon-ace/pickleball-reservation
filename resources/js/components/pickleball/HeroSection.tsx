@@ -91,7 +91,7 @@ const HeroSection = ({ onBookNow }: { onBookNow: () => void }) => {
                         {[
                             {
                                 icon: MapPin,
-                                label: '6 Courts',
+                                label: '8 Courts',
                                 sub: 'Indoor & Outdoor',
                             },
                             {

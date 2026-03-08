@@ -117,7 +117,7 @@ const BookingSection = ({
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                 >
-                    <span className="mb-4 inline-block rounded-full bg-green-500/10 px-4 py-1.5 text-sm font-medium text-green-500 shadow-md backdrop-blur-lg hover:bg-green-500/20">
+                    <span className="mb-4 inline-block rounded-full bg-green-500/10 px-4 py-1.5 text-sm font-medium text-green-900 shadow-md backdrop-blur-lg hover:bg-green-500/20">
                         <Calendar className="mr-1 inline h-4 w-4" />
                         Reservations
                     </span>
@@ -148,7 +148,7 @@ const BookingSection = ({
                                     delay: 0.2,
                                 }}
                             >
-                                <CheckCircle2 className="mx-auto mb-6 h-20 w-20 text-black" />
+                                <CheckCircle2 className="mx-auto mb-6 h-20 w-20 text-green-500" />
                             </motion.div>
                             <h3 className="font-display mb-2 text-2xl font-bold text-black">
                                 Booking Confirmed!
@@ -186,18 +186,10 @@ const BookingSection = ({
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -30 }}
                         >
-                            <Button
-                                className="mb-4 bg-blue-500 text-left text-white hover:bg-blue-900"
-                                onClick={() => {
-                                    setSelectedCourt(null);
-                                    setSelectedTime(null);
-                                }}
-                            >
-                                <ChevronLeft className="mr-1 h-4 w-4" /> Back to
-                                courts
-                            </Button>
-
-                            <div className="glass-card rounded-xl bg-white p-6 sm:p-8">
+                            <div className="glass-card rounded-xl bg-white p-6 shadow-lg sm:p-8">
+                                <h3 className="font-display mb-5 flex justify-start text-xl font-bold text-black">
+                                    Court Details
+                                </h3>
                                 <h3 className="font-display mb-1 text-xl font-bold text-black">
                                     {selectedCourt.name}
                                 </h3>
@@ -208,7 +200,7 @@ const BookingSection = ({
 
                                 <div className="mb-6">
                                     <label className="mb-2 block text-sm font-medium text-black">
-                                        Date
+                                        Choose Date
                                         <input
                                             type="date"
                                             value={selectedDate}
@@ -239,6 +231,7 @@ const BookingSection = ({
                                                 bookedSlots.includes(slot);
                                             const isSelected =
                                                 selectedTime === slot;
+
                                             return (
                                                 <motion.button
                                                     key={slot}
@@ -256,15 +249,39 @@ const BookingSection = ({
                                                     onClick={() =>
                                                         setSelectedTime(slot)
                                                     }
-                                                    className={`rounded-lg border bg-blue-400 px-2 py-3 text-sm font-medium transition-all duration-200 ${
+                                                    className={`flex flex-col items-center justify-center rounded-lg border px-2 py-3 text-sm font-medium transition-all duration-200 ${
                                                         isBooked
-                                                            ? 'cursor-not-allowed border-border bg-white text-red-500 line-through'
+                                                            ? 'cursor-not-allowed border-border bg-white text-red-500'
                                                             : isSelected
-                                                              ? 'gradient-primary animate-pulse-glow border-transparent shadow-lg'
+                                                              ? 'animate-pulse-glow border-transparent bg-blue-500 text-white shadow-lg'
                                                               : 'cursor-pointer border-border bg-black/30 bg-white text-black backdrop-blur-sm hover:border-black hover:text-black'
                                                     }`}
                                                 >
-                                                    {slot}
+                                                    {/* Time */}
+                                                    <span
+                                                        className={`font-semibold ${
+                                                            isBooked
+                                                                ? 'line-through'
+                                                                : ''
+                                                        }`}
+                                                    >
+                                                        {slot}
+                                                    </span>
+
+                                                    {/* Status */}
+                                                    <span
+                                                        className={`text-xs ${
+                                                            isBooked
+                                                                ? 'text-red-500'
+                                                                : isSelected
+                                                                  ? 'text-white'
+                                                                  : 'text-green-600'
+                                                        }`}
+                                                    >
+                                                        {isBooked
+                                                            ? 'Taken'
+                                                            : 'Available'}
+                                                    </span>
                                                 </motion.button>
                                             );
                                         })}
@@ -278,15 +295,29 @@ const BookingSection = ({
                                         opacity: selectedTime ? 1 : 0.5,
                                     }}
                                 >
-                                    <Button
-                                        size="lg"
-                                        className="w-full bg-gradient-to-r from-[#0e96b8] to-[#5acde7] py-6 text-base text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
-                                        disabled={!selectedTime}
-                                        onClick={handleConfirm}
-                                    >
-                                        <CheckCircle2 className="mr-2 h-5 w-5" />
-                                        {`Confirm Reservation — ${selectedTime || 'Select a time'}`}
-                                    </Button>
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                                        <Button
+                                            size="lg"
+                                            className="w-full cursor-pointer bg-gradient-to-r from-[#0e96b8] to-[#5acde7] py-6 text-base text-white hover:from-[#0c84a0] hover:to-[#4fc3e0] sm:flex-1"
+                                            disabled={!selectedTime}
+                                            onClick={handleConfirm}
+                                        >
+                                            <CheckCircle2 className="mr-2 h-5 w-5" />
+                                            {`Confirm Reservation — ${selectedTime || 'Select a time'}`}
+                                        </Button>
+
+                                        <Button
+                                            size="lg"
+                                            variant="outline"
+                                            className="w-full cursor-pointer bg-white py-6 text-black shadow-lg sm:flex-1"
+                                            onClick={() => {
+                                                setSelectedCourt(null);
+                                                setSelectedTime(null);
+                                            }}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </div>
                                 </motion.div>
                             </div>
                         </motion.div>

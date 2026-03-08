@@ -22,7 +22,7 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                         className="font-display flex flex-col items-start gap-1 text-foreground md:flex-row md:items-center md:gap-2"
                     >
                         <span className="text-gradient tracking-wider text-black sm:text-base md:text-lg lg:text-lg">
-                            Picklora: Pickleball Court Reservation System
+                            🏓 Picklora: Pickleball Court Reservation System
                         </span>
                     </a>
 
@@ -107,7 +107,7 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
             <AnimatePresence>
                 {open && (
                     <motion.div
-                        className="overflow-hidden rounded-b-md bg-white shadow-md md:hidden"
+                        className="overflow-hidden rounded-b-md bg-background shadow-md md:hidden"
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}

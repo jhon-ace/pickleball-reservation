@@ -77,7 +77,7 @@ const CourtCard = ({
                         // variant={court.available ? 'hero' : 'outline'}
                         // variant={'default'}
                         value={'default'}
-                        size="sm"
+                        size="lg"
                         disabled={!court.available}
                         className="cursor-pointer bg-gradient-to-r from-[#0e96b8] to-[#5acde7] text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
                     >
