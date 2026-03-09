@@ -2,14 +2,26 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Menu, X, User, LogOut, Shield, Calendar } from 'lucide-react';
-import { router } from '@inertiajs/react';
+import { router, usePage, Link } from '@inertiajs/react';
+import toast from 'react-hot-toast';
 
 const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
     const [open, setOpen] = useState(false);
-    const user = false;
-    const isAdmin = false;
+    const { props } = usePage<any>();
+    const user = props.auth?.user;
+    const isAdmin = user?.is_admin;
 
-    const handleSignOut = async () => {
+    const handleSignOut = () => {
+        router.post(
+            '/logout',
+            {},
+            {
+                preserveState: false,
+                onSuccess: () => {
+                    toast.success('Logged out successfully!');
+                },
+            },
+        );
         setOpen(false);
     };
 
@@ -49,7 +61,7 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                         {user ? (
                             <div className="flex items-center gap-3">
                                 <Button
-                                    variant="ghost"
+                                    className="cursor-pointer bg-background text-white hover:text-black"
                                     size="sm"
                                     onClick={() =>
                                         router.visit('/my-reservations')
@@ -58,7 +70,13 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                                     <Calendar className="mr-1 h-4 w-4" /> My
                                     Bookings
                                 </Button>
-                                {isAdmin && (
+
+                                <span className="flex items-center gap-1 font-medium text-black">
+                                    <User className="h-4 w-4" />
+                                    {user?.name ?? 'Guest'}
+                                </span>
+
+                                {isAdmin ? (
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -67,32 +85,39 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                                         <Shield className="mr-1 h-4 w-4" />{' '}
                                         Admin
                                     </Button>
-                                )}
+                                ) : null}
+
                                 <Button
-                                    variant="ghost"
                                     size="sm"
                                     onClick={handleSignOut}
+                                    className="rounded-full p-2 text-black hover:underline" // circular clickable area with hover
                                 >
-                                    <LogOut className="mr-1 h-4 w-4" /> Sign Out
+                                    <LogOut className="h-6 w-6 text-black" />{' '}
+                                    Logout
                                 </Button>
                             </div>
                         ) : (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => router.visit('/auth')}
-                            >
-                                <User className="mr-1 h-4 w-4" /> Sign In
-                            </Button>
+                            <>
+                                <Link href="/auth">
+                                    <Button
+                                        className="cursor-pointer bg-background text-white hover:text-black"
+                                        size="sm"
+                                    >
+                                        <User className="mr-1 h-4 w-4" /> Sign
+                                        In
+                                    </Button>
+                                </Link>
+                                {!isAdmin && (
+                                    <Button
+                                        className="bg-gradient-to-r from-[#0e96b8] to-[#5acde7] text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
+                                        size="sm"
+                                        onClick={onBookNow}
+                                    >
+                                        Book Now
+                                    </Button>
+                                )}
+                            </>
                         )}
-
-                        <Button
-                            className="bg-gradient-to-r from-[#0e96b8] to-[#5acde7] text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
-                            size="sm"
-                            onClick={onBookNow}
-                        >
-                            Book Now
-                        </Button>
                     </div>
 
                     <button
@@ -169,7 +194,7 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="w-full justify-start"
+                                        className="w-full cursor-pointer justify-start"
                                         onClick={handleSignOut}
                                     >
                                         <LogOut className="mr-1 h-4 w-4" /> Sign

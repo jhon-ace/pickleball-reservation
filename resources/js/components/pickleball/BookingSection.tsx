@@ -187,17 +187,19 @@ const BookingSection = ({
                             exit={{ opacity: 0, x: -30 }}
                         >
                             <div className="glass-card rounded-xl bg-white p-6 shadow-lg sm:p-8">
-                                <h3 className="font-display mb-5 flex justify-start text-xl font-bold text-black">
+                                <h3 className="font-display mb-5 flex justify-center text-xl font-bold text-black">
                                     Court Details
                                 </h3>
+
                                 <h3 className="font-display mb-1 text-xl font-bold text-black">
-                                    {selectedCourt.name}
+                                    <span className="text-red-500">
+                                        {selectedCourt.name}
+                                    </span>
                                 </h3>
                                 <p className="mb-6 text-sm text-black">
                                     {selectedCourt.type} ·{' '}
                                     {selectedCourt.surface} surface
                                 </p>
-
                                 <div className="mb-6">
                                     <label className="mb-2 block text-sm font-medium text-black">
                                         Choose Date
@@ -219,7 +221,6 @@ const BookingSection = ({
                                         />
                                     </label>
                                 </div>
-
                                 <div>
                                     <label className="mb-3 block text-sm font-medium text-black">
                                         <Clock className="mr-1 inline h-4 w-4" />{' '}
@@ -287,7 +288,6 @@ const BookingSection = ({
                                         })}
                                     </div>
                                 </div>
-
                                 <motion.div
                                     className="mt-8"
                                     initial={false}
