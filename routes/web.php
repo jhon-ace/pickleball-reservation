@@ -19,6 +19,8 @@ Route::get('/court-admin', function () {
     return Inertia::render('Index');
 });
 
+
+
 /*
 |--------------------------------------------------------------------------
 | Guest Routes (Only for non-authenticated users)
@@ -56,6 +58,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-reservations', function () {
         return Inertia::render('MyReservations');
     });
+
+    Route::get('/', [CourtController::class, 'index']);
 
 });
 

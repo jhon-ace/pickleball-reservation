@@ -9,7 +9,7 @@ export interface Court {
     type: 'indoor' | 'outdoor';
     surface: string;
     available: boolean;
-    image: string;
+    image: string | null;
 }
 
 const CourtCard = ({
@@ -38,9 +38,13 @@ const CourtCard = ({
         >
             <div className="relative h-48 overflow-hidden">
                 <img
-                    src={court.image}
+                    src={
+                        court.image
+                            ? `/storage/${court.image}`
+                            : '/assets/img/default-court.jpg'
+                    }
                     alt={court.name}
-                    className="h-full w-full object-cover text-black transition-transform duration-500 group-hover:scale-110"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute top-3 left-3 flex gap-2">
                     <Badge className={typeColors[court.type]}>

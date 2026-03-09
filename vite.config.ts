@@ -21,19 +21,19 @@ export default defineConfig({
             formVariants: true,
         }),
     ],
-    esbuild: {
-        jsx: 'automatic',
-    },
-    server: {
-        host: '0.0.0.0',
-        port: 5173,
-        strictPort: false,
-        hmr: {
-            host: '192.168.1.39',
-            protocol: 'ws',
-        },
-        watch: {
-            usePolling: true,
-        },
-    },
+    // esbuild: {
+    //     jsx: 'automatic',
+    // },
+    // server: {
+    //     host: '0.0.0.0',
+    //     port: 5173,
+    //     strictPort: false,
+    //     hmr: {
+    //         host: '192.168.1.39',
+    //         protocol: 'ws',
+    //     },
+    //     watch: {
+    //         usePolling: true,
+    //     },
+    // },
 });

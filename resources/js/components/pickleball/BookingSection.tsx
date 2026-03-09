@@ -1,60 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, CheckCircle2, ChevronLeft } from 'lucide-react';
 import CourtCard, { type Court } from './CourtCard';
-import heroImage from '../../../../public/assets/img/hero-courts.jpg';
-
-const courts: Court[] = [
-    {
-        id: 1,
-        name: 'Court A — Championship',
-        type: 'indoor',
-        surface: 'Cushioned',
-        available: true,
-        image: heroImage,
-    },
-    {
-        id: 2,
-        name: 'Court B — Pro',
-        type: 'indoor',
-        surface: 'Cushioned',
-        available: true,
-        image: heroImage,
-    },
-    {
-        id: 3,
-        name: 'Court C — Garden',
-        type: 'outdoor',
-        surface: 'Concrete',
-        available: true,
-        image: heroImage,
-    },
-    {
-        id: 4,
-        name: 'Court D — Sunset',
-        type: 'outdoor',
-        surface: 'Asphalt',
-        available: false,
-        image: heroImage,
-    },
-    {
-        id: 5,
-        name: 'Court E — Baseline',
-        type: 'indoor',
-        surface: 'Sport Court',
-        available: true,
-        image: heroImage,
-    },
-    {
-        id: 6,
-        name: 'Court F — Rally',
-        type: 'outdoor',
-        surface: 'Concrete',
-        available: true,
-        image: heroImage,
-    },
-];
+import { usePage } from '@inertiajs/react';
+import toast from 'react-hot-toast';
 
 const timeSlots = [
     '6:00 AM',
@@ -82,13 +32,39 @@ const BookingSection = ({
 }: {
     sectionRef: React.RefObject<HTMLDivElement>;
 }) => {
+    const [courts, setCourts] = useState<Court[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { props } = usePage<any>();
     const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
     const [selectedDate, setSelectedDate] = useState<string>(
         new Date().toISOString().split('T')[0],
     );
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [confirmed, setConfirmed] = useState(false);
+    useEffect(() => {
+        fetch('/courts')
+            .then((res) => res.json())
+            .then((data) => {
+                setCourts(data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error(err);
+                setLoading(false);
+            });
+    }, []);
 
+    useEffect(() => {
+        const stored = localStorage.getItem('pendingBooking');
+        if (stored) {
+            const { court, date, time } = JSON.parse(stored);
+            setSelectedCourt(court);
+            setSelectedDate(date);
+            setSelectedTime(time);
+
+            localStorage.removeItem('pendingBooking');
+        }
+    }, []);
     const handleSelectCourt = (court: Court) => {
         setSelectedCourt(court);
     };
@@ -96,14 +72,45 @@ const BookingSection = ({
     const handleConfirm = () => {
         if (!selectedCourt || !selectedTime) return;
 
+        const user = props.auth?.user;
+
+        if (!user) {
+            localStorage.setItem(
+                'pendingBooking',
+                JSON.stringify({
+                    court: selectedCourt,
+                    date: selectedDate,
+                    time: selectedTime,
+                }),
+            );
+
+            toast(
+                'Please sign up or log in to confirm your reservation. Redirecting now...',
+                {
+                    icon: '⚠️',
+                    duration: 2500,
+                    style: {
+                        background: '#f97316',
+                        color: 'white',
+                    },
+                },
+            );
+
+            setTimeout(() => {
+                window.location.href = '/auth';
+            }, 2500);
+
+            return;
+        }
+
         setConfirmed(true);
+
         setTimeout(() => {
             setConfirmed(false);
             setSelectedCourt(null);
             setSelectedTime(null);
-        }, 3000);
+        }, 5000);
     };
-
     return (
         <section
             ref={sectionRef}
@@ -166,17 +173,21 @@ const BookingSection = ({
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                         >
-                            {courts.map((court, i) => (
-                                <div key={court.id} className="p-2 sm:p-4">
-                                    {' '}
-                                    {/* padding inside each card */}
-                                    <CourtCard
-                                        court={court}
-                                        index={i}
-                                        onSelect={handleSelectCourt}
-                                    />
-                                </div>
-                            ))}
+                            {loading ? (
+                                <p className="text-center text-black">
+                                    Loading courts...
+                                </p>
+                            ) : (
+                                courts.map((court, i) => (
+                                    <div key={court.id} className="p-2 sm:p-4">
+                                        <CourtCard
+                                            court={court}
+                                            index={i}
+                                            onSelect={handleSelectCourt}
+                                        />
+                                    </div>
+                                ))
+                            )}
                         </motion.div>
                     ) : (
                         <motion.div

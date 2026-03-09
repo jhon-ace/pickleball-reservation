@@ -19,7 +19,7 @@ const Auth = () => {
     const handleSignIn = (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setFormError(null); // reset previous error
+        setFormError(null);
 
         router.post(
             '/login',
@@ -29,7 +29,6 @@ const Auth = () => {
                     toast.success('Signed in successfully!');
                 },
                 onError: (errors: any) => {
-                    // Laravel usually sends errors as arrays, e.g., errors.email = ["Invalid email or password."]
                     if (errors.email) {
                         setFormError(
                             Array.isArray(errors.email)

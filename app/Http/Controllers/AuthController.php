@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
+use App\Models\Court;
 use Inertia\Inertia;
 
 class AuthController extends Controller
@@ -104,5 +105,12 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/')->with('success', 'Logged out successfully.');
+    }
+
+
+    public function court()
+    {
+        $courts = Court::select('id', 'name', 'type', 'surface', 'image', 'available')->get();
+        return response()->json($courts);
     }
 }

@@ -32,6 +32,7 @@ const Index = () => {
             <Map />
             <Footer />
             <Toaster position="top-center" />
+            <h1>Hello World</h1>
         </div>
     );
 };
