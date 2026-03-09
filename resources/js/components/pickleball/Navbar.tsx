@@ -9,7 +9,7 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
     const [open, setOpen] = useState(false);
     const { props } = usePage<any>();
     const user = props.auth?.user;
-    const isAdmin = user?.is_admin;
+    const isAdmin = Boolean(user?.is_admin);
 
     const handleSignOut = () => {
         router.post(
@@ -17,12 +17,63 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
             {},
             {
                 preserveState: false,
-                onSuccess: () => {
-                    toast.success('Logged out successfully!');
-                },
+                onSuccess: () => toast.success('Logged out successfully!'),
             },
         );
         setOpen(false);
+    };
+
+    const renderUserMenu = () => {
+        if (!user) {
+            return (
+                <Link href="/auth">
+                    <Button
+                        className="cursor-pointer bg-background text-white hover:text-black"
+                        size="sm"
+                    >
+                        <User className="mr-1 h-4 w-4" /> Sign In
+                    </Button>
+                </Link>
+            );
+        }
+
+        return (
+            <div className="flex items-center gap-3">
+                {!isAdmin && (
+                    <Button
+                        className="cursor-pointer bg-background text-white hover:text-black"
+                        size="sm"
+                        onClick={() => router.visit('/my-reservations')}
+                    >
+                        <Calendar className="mr-1 h-4 w-4" /> My Bookings
+                    </Button>
+                )}
+
+                {!isAdmin && (
+                    <span className="flex items-center gap-1 font-medium text-black">
+                        <User className="h-4 w-4" /> {user?.name ?? 'Guest'}
+                    </span>
+                )}
+
+                {isAdmin && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.visit('/admin')}
+                    >
+                        <Shield className="mr-1 h-4 w-4" /> Admin
+                    </Button>
+                )}
+
+                <Button
+                    size="sm"
+                    onClick={handleSignOut}
+                    className="rounded-full p-2 text-black hover:underline"
+                >
+                    <LogOut className="h-6 w-6 text-black" />
+                </Button>
+            </div>
+        );
     };
 
     return (
@@ -58,66 +109,17 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                             Pricing
                         </a>
 
-                        {user ? (
-                            <div className="flex items-center gap-3">
-                                <Button
-                                    className="cursor-pointer bg-background text-white hover:text-black"
-                                    size="sm"
-                                    onClick={() =>
-                                        router.visit('/my-reservations')
-                                    }
-                                >
-                                    <Calendar className="mr-1 h-4 w-4" /> My
-                                    Bookings
-                                </Button>
-
-                                <span className="flex items-center gap-1 font-medium text-black">
-                                    <User className="h-4 w-4" />
-                                    {user?.name ?? 'Guest'}
-                                </span>
-
-                                {isAdmin ? (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => router.visit('/admin')}
-                                    >
-                                        <Shield className="mr-1 h-4 w-4" />{' '}
-                                        Admin
-                                    </Button>
-                                ) : null}
-
-                                <Button
-                                    size="sm"
-                                    onClick={handleSignOut}
-                                    className="rounded-full p-2 text-black hover:underline" // circular clickable area with hover
-                                >
-                                    <LogOut className="h-6 w-6 text-black" />{' '}
-                                    Logout
-                                </Button>
-                            </div>
-                        ) : (
-                            <>
-                                <Link href="/auth">
-                                    <Button
-                                        className="cursor-pointer bg-background text-white hover:text-black"
-                                        size="sm"
-                                    >
-                                        <User className="mr-1 h-4 w-4" /> Sign
-                                        In
-                                    </Button>
-                                </Link>
-                                {!isAdmin && (
-                                    <Button
-                                        className="bg-gradient-to-r from-[#0e96b8] to-[#5acde7] text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
-                                        size="sm"
-                                        onClick={onBookNow}
-                                    >
-                                        Book Now
-                                    </Button>
-                                )}
-                            </>
+                        {!isAdmin && (
+                            <Button
+                                className="bg-gradient-to-r from-[#0e96b8] to-[#5acde7] text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
+                                size="sm"
+                                onClick={onBookNow}
+                            >
+                                Book Now
+                            </Button>
                         )}
+
+                        {renderUserMenu()}
                     </div>
 
                     <button
@@ -165,24 +167,37 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                                 Pricing
                             </a>
 
+                            {!isAdmin && (
+                                <Button
+                                    className="bg-gradient-to-r from-[#0e96b8] to-[#5acde7] text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
+                                    size="sm"
+                                    onClick={onBookNow}
+                                >
+                                    Book Now
+                                </Button>
+                            )}
+
                             {user ? (
                                 <>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="w-full justify-start"
-                                        onClick={() =>
-                                            router.visit('/my-reservations')
-                                        }
-                                    >
-                                        <Calendar className="mr-1 h-4 w-4" /> My
-                                        Bookings
-                                    </Button>
+                                    {!isAdmin && (
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="w-full"
+                                            onClick={() =>
+                                                router.visit('/my-reservations')
+                                            }
+                                        >
+                                            <Calendar className="mr-1 h-4 w-4" />{' '}
+                                            My Bookings
+                                        </Button>
+                                    )}
+
                                     {isAdmin && (
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="w-full justify-start"
+                                            className="w-full"
                                             onClick={() =>
                                                 router.visit('/admin')
                                             }
@@ -191,10 +206,11 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                                             Admin
                                         </Button>
                                     )}
+
                                     <Button
-                                        variant="ghost"
+                                        variant="secondary"
                                         size="sm"
-                                        className="w-full cursor-pointer justify-start"
+                                        className="w-full"
                                         onClick={handleSignOut}
                                     >
                                         <LogOut className="mr-1 h-4 w-4" /> Sign
@@ -211,14 +227,6 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                                     <User className="mr-1 h-4 w-4" /> Sign In
                                 </Button>
                             )}
-
-                            <Button
-                                className="bg-gradient-to-r from-[#0e96b8] to-[#5acde7] text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
-                                size="sm"
-                                onClick={onBookNow}
-                            >
-                                Book Now
-                            </Button>
                         </div>
                     </motion.div>
                 )}
