@@ -1,31 +1,16 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, CheckCircle2, ChevronLeft } from 'lucide-react';
+import { Calendar, Clock, CheckCircle2 } from 'lucide-react';
 import CourtCard, { type Court } from './CourtCard';
 import { usePage } from '@inertiajs/react';
 import toast from 'react-hot-toast';
+import MyBookings from './MyBooking';
 
-const timeSlots = [
-    '6:00 AM',
-    '7:00 AM',
-    '8:00 AM',
-    '9:00 AM',
-    '10:00 AM',
-    '11:00 AM',
-    '12:00 PM',
-    '1:00 PM',
-    '2:00 PM',
-    '3:00 PM',
-    '4:00 PM',
-    '5:00 PM',
-    '6:00 PM',
-    '7:00 PM',
-    '8:00 PM',
-    '9:00 PM',
-];
-
-const bookedSlots = ['9:00 AM', '2:00 PM', '6:00 PM'];
+type Time = {
+    id: number;
+    label: string;
+};
 
 const BookingSection = ({
     sectionRef,
@@ -33,6 +18,7 @@ const BookingSection = ({
     sectionRef: React.RefObject<HTMLDivElement>;
 }) => {
     const [courts, setCourts] = useState<Court[]>([]);
+    const [times, setTimes] = useState<Time[]>([]);
     const [loading, setLoading] = useState(true);
     const { props } = usePage<any>();
     const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
@@ -40,7 +26,20 @@ const BookingSection = ({
         new Date().toISOString().split('T')[0],
     );
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
-    const [confirmed, setConfirmed] = useState(false);
+    const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+    const [bookingStatus, setBookingStatus] = useState<
+        'none' | 'pending' | 'confirmed'
+    >('none');
+    const [referenceNumber, setReferenceNumber] = useState<string | null>(null);
+    const [showMyBookings, setShowMyBookings] = useState(false);
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const minDate = `${yyyy}-${mm}-${dd}`;
+
+    // Fetch courts
     useEffect(() => {
         fetch('/courts')
             .then((res) => res.json())
@@ -54,6 +53,27 @@ const BookingSection = ({
             });
     }, []);
 
+    // Fetch times
+    useEffect(() => {
+        fetch('/bookings/time')
+            .then((res) => res.json())
+            .then((data) => setTimes(data))
+            .catch((err) => console.error(err));
+    }, []);
+
+    // Fetch booked slots for selected court/date
+    useEffect(() => {
+        if (!selectedCourt || !selectedDate) return;
+
+        fetch(
+            `/bookings/slots?court_id=${selectedCourt.id}&date=${selectedDate}`,
+        )
+            .then((res) => res.json())
+            .then((data) => setBookedSlots(data))
+            .catch((err) => console.error(err));
+    }, [selectedCourt, selectedDate]);
+
+    // Load pending booking from localStorage
     useEffect(() => {
         const stored = localStorage.getItem('pendingBooking');
         if (stored) {
@@ -61,56 +81,77 @@ const BookingSection = ({
             setSelectedCourt(court);
             setSelectedDate(date);
             setSelectedTime(time);
-
             localStorage.removeItem('pendingBooking');
         }
     }, []);
-    const handleSelectCourt = (court: Court) => {
-        setSelectedCourt(court);
+
+    const handleSelectCourt = (court: Court) => setSelectedCourt(court);
+
+    const formatTime = (time: string) => {
+        const [t, modifier] = time.split(' ');
+        let [hours, minutes] = t.split(':');
+
+        if (hours === '12') hours = '00';
+        if (modifier === 'PM') hours = String(parseInt(hours, 10) + 12);
+
+        return `${hours.padStart(2, '0')}:${minutes}:00`;
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!selectedCourt || !selectedTime) return;
-
         const user = props.auth?.user;
-
         if (!user) {
             localStorage.setItem(
                 'pendingBooking',
                 JSON.stringify({
                     court: selectedCourt,
                     date: selectedDate,
-                    time: selectedTime,
+                    time: formatTime(selectedTime),
                 }),
             );
-
-            toast(
-                'Please sign up or log in to confirm your reservation. Redirecting now...',
-                {
-                    icon: '⚠️',
-                    duration: 2500,
-                    style: {
-                        background: '#f97316',
-                        color: 'white',
-                    },
-                },
-            );
-
-            setTimeout(() => {
-                window.location.href = '/auth';
-            }, 2500);
-
+            toast('Please sign up or log in to confirm your reservation.', {
+                icon: '⚠️',
+                duration: 2500,
+                style: { background: '#f97316', color: 'white' },
+            });
+            setTimeout(() => (window.location.href = '/auth'), 2500);
             return;
         }
 
-        setConfirmed(true);
+        try {
+            const res = await fetch('/bookings', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') || '',
+                    Accept: 'application/json',
+                },
+                body: JSON.stringify({
+                    court_id: selectedCourt.id,
+                    date: selectedDate,
+                    time: formatTime(selectedTime),
+                }),
+            });
 
-        setTimeout(() => {
-            setConfirmed(false);
-            setSelectedCourt(null);
-            setSelectedTime(null);
-        }, 5000);
+            const data = await res.json();
+            if (data.success) {
+                setReferenceNumber(data.booking.reference_number);
+                setBookingStatus(
+                    data.booking.is_pending ? 'pending' : 'confirmed',
+                );
+            } else {
+                toast.error('Booking failed!');
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Something went wrong!');
+        }
     };
+
     return (
         <section
             ref={sectionRef}
@@ -118,33 +159,44 @@ const BookingSection = ({
             id="booking"
         >
             <div className="container">
-                <motion.div
-                    className="mb-12 text-center"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                >
-                    <span className="mb-4 inline-block rounded-full bg-green-500/10 px-4 py-1.5 text-sm font-medium text-green-900 shadow-md backdrop-blur-lg hover:bg-green-500/20">
-                        <Calendar className="mr-1 inline h-4 w-4" />
-                        Reservations
-                    </span>
-                    <h2 className="font-display text-3xl font-bold text-black sm:text-4xl md:text-5xl">
-                        Book Your <span className="text-gradient">Court</span>
-                    </h2>
-                    <p className="mx-auto mt-3 max-w-md text-black">
-                        Select a court, pick your time, and confirm your
-                        booking.
-                    </p>
-                </motion.div>
+                {/* Header Section */}
+                {!showMyBookings && (
+                    <motion.div
+                        className="mb-1 text-center sm:mb-12"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                    >
+                        <span className="mb-4 inline-block rounded-full bg-green-500/10 px-4 py-1.5 text-sm font-medium text-green-900 shadow-md backdrop-blur-lg hover:bg-green-500/20">
+                            <Calendar className="mr-1 inline h-4 w-4" />{' '}
+                            Reservations
+                        </span>
+                        <h2 className="font-display text-3xl font-bold text-black sm:text-4xl md:text-5xl">
+                            Book Your{' '}
+                            <span className="text-gradient">Court</span>
+                        </h2>
+                        <p className="mx-auto mt-3 max-w-md text-black">
+                            Select a court, pick your time, and confirm your
+                            booking.
+                        </p>
+                    </motion.div>
+                )}
 
                 <AnimatePresence mode="wait">
-                    {confirmed ? (
+                    {/* My Bookings */}
+                    {showMyBookings ? (
+                        <MyBookings
+                            bookingStatus={bookingStatus}
+                            setBookingStatus={setBookingStatus}
+                        />
+                    ) : bookingStatus === 'pending' ? (
+                        /* Pending Card */
                         <motion.div
-                            key="confirmed"
-                            className="mx-auto max-w-md py-16 text-center"
-                            initial={{ opacity: 0, scale: 0.9 }}
+                            key="pending"
+                            className="mx-auto max-w-md rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-2xl"
+                            initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
                         >
                             <motion.div
                                 initial={{ scale: 0 }}
@@ -154,18 +206,128 @@ const BookingSection = ({
                                     stiffness: 200,
                                     delay: 0.2,
                                 }}
+                                className="mb-6"
                             >
-                                <CheckCircle2 className="mx-auto mb-6 h-20 w-20 text-green-500" />
+                                <CheckCircle2 className="mx-auto h-15 w-15 text-yellow-500 drop-shadow-md" />
                             </motion.div>
-                            <h3 className="font-display mb-2 text-2xl font-bold text-black">
-                                Booking Confirmed!
+
+                            <h3 className="mb-4 font-sans text-3xl font-bold tracking-wide text-gray-900">
+                                Booking Pending
                             </h3>
-                            <p className="text-black">
-                                {selectedCourt?.name} — {selectedDate} at{' '}
-                                {selectedTime}
+                            <p className="mb-6 text-sm text-gray-700">
+                                Your reservation is successfully recorded.
+                                <br />
+                                Please wait for confirmation.
                             </p>
+
+                            {/* Reservation Details */}
+                            <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-6 text-left shadow-sm">
+                                <h4 className="mb-4 text-center text-lg font-semibold text-gray-700">
+                                    Reservation Details
+                                </h4>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center justify-start">
+                                        <span className="font-medium text-gray-500">
+                                            Name:
+                                        </span>
+                                        <span className="ml-2 font-medium text-gray-900">
+                                            {props.auth?.user?.name ||
+                                                props.auth?.user?.id ||
+                                                'Guest'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-start">
+                                        <span className="font-medium text-gray-500">
+                                            Email:
+                                        </span>
+                                        <span className="ml-3 font-medium text-gray-900">
+                                            {props.auth?.user?.email || 'N/A'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-start">
+                                        <span className="font-medium text-gray-500">
+                                            Court:
+                                        </span>
+                                        <span className="ml-3 font-medium text-gray-900">
+                                            {selectedCourt?.name}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-start">
+                                        <span className="font-medium text-gray-500">
+                                            Date:
+                                        </span>
+                                        <span className="ml-5 font-medium text-gray-900">
+                                            {selectedDate}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-start">
+                                        <span className="font-medium text-gray-500">
+                                            Time:
+                                        </span>
+                                        <span className="ml-4 font-medium text-gray-900">
+                                            {selectedTime}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Reference Number */}
+                            <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 text-center">
+                                <p className="mb-2 text-sm text-gray-800">
+                                    Booking Reference Number:
+                                </p>
+                                <div className="flex justify-center gap-2 text-center">
+                                    <span
+                                        className="cursor-pointer rounded bg-gray-100 px-3 py-2 font-mono text-lg text-gray-900 shadow-sm transition select-all hover:bg-gray-200"
+                                        onClick={() => {
+                                            if (!referenceNumber) return;
+                                            navigator.clipboard.writeText(
+                                                referenceNumber,
+                                            );
+                                            toast.success(
+                                                'Reference number copied!',
+                                            );
+                                        }}
+                                        title="Click to copy"
+                                    >
+                                        {referenceNumber}
+                                    </span>
+                                    <button
+                                        className="rounded-lg bg-blue-600 px-3 py-2 text-white shadow transition hover:bg-blue-700"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(
+                                                referenceNumber || '',
+                                            );
+                                            toast.success(
+                                                'Reference number copied!',
+                                            );
+                                        }}
+                                    >
+                                        Copy
+                                    </button>
+                                </div>
+                                <p className="mt-3 text-sm text-gray-700">
+                                    Click My Bookings for confirmation
+                                </p>
+                            </div>
+
+                            <button
+                                className="w-full rounded-lg bg-gradient-to-r from-[#0e96b8] to-[#5acde7] py-3 font-semibold text-white shadow-lg transition-all hover:from-[#0c84a0] hover:to-[#4fc3e0]"
+                                onClick={() => {
+                                    setBookingStatus('none');
+                                    setSelectedCourt(null);
+                                    setSelectedTime(null);
+                                }}
+                            >
+                                Back to Courts
+                            </button>
                         </motion.div>
                     ) : !selectedCourt ? (
+                        /* Courts List */
                         <motion.div
                             key="courts"
                             className="grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-3 lg:px-0"
@@ -197,6 +359,7 @@ const BookingSection = ({
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -30 }}
                         >
+                            {/* Timeslots / Court Details Card */}
                             <div className="glass-card rounded-xl bg-white p-6 shadow-lg sm:p-8">
                                 <h3 className="font-display mb-5 flex justify-center text-xl font-bold text-black">
                                     Court Details
@@ -211,6 +374,7 @@ const BookingSection = ({
                                     {selectedCourt.type} ·{' '}
                                     {selectedCourt.surface} surface
                                 </p>
+
                                 <div className="mb-6">
                                     <label className="mb-2 block text-sm font-medium text-black">
                                         Choose Date
@@ -222,31 +386,29 @@ const BookingSection = ({
                                             }
                                             onKeyDown={(e) =>
                                                 e.preventDefault()
-                                            } // prevent typing
-                                            min={
-                                                new Date()
-                                                    .toISOString()
-                                                    .split('T')[0]
                                             }
+                                            min={minDate}
                                             className="ml-3 w-1/2 cursor-pointer rounded-lg bg-gradient-to-r from-[#0e96b8] to-[#5acde7] px-2 py-2 text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
                                         />
                                     </label>
                                 </div>
+
                                 <div>
                                     <label className="mb-3 block text-sm font-medium text-black">
                                         <Clock className="mr-1 inline h-4 w-4" />{' '}
                                         Available Times
                                     </label>
                                     <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                                        {timeSlots.map((slot) => {
+                                        {times.map((slot) => {
                                             const isBooked =
-                                                bookedSlots.includes(slot);
+                                                bookedSlots.includes(
+                                                    slot.label,
+                                                );
                                             const isSelected =
-                                                selectedTime === slot;
-
+                                                selectedTime === slot.label;
                                             return (
                                                 <motion.button
-                                                    key={slot}
+                                                    key={slot.id}
                                                     whileHover={
                                                         !isBooked
                                                             ? { scale: 1.05 }
@@ -259,28 +421,23 @@ const BookingSection = ({
                                                     }
                                                     disabled={isBooked}
                                                     onClick={() =>
-                                                        setSelectedTime(slot)
+                                                        setSelectedTime(
+                                                            slot.label,
+                                                        )
                                                     }
                                                     className={`flex flex-col items-center justify-center rounded-lg border px-2 py-3 text-sm font-medium transition-all duration-200 ${
                                                         isBooked
                                                             ? 'cursor-not-allowed border-border bg-white text-red-500'
                                                             : isSelected
                                                               ? 'animate-pulse-glow border-transparent bg-blue-500 text-white shadow-lg'
-                                                              : 'cursor-pointer border-border bg-black/30 bg-white text-black backdrop-blur-sm hover:border-black hover:text-black'
+                                                              : 'cursor-pointer border-border bg-white text-black hover:border-black'
                                                     }`}
                                                 >
-                                                    {/* Time */}
                                                     <span
-                                                        className={`font-semibold ${
-                                                            isBooked
-                                                                ? 'line-through'
-                                                                : ''
-                                                        }`}
+                                                        className={`font-semibold ${isBooked ? 'line-through' : ''}`}
                                                     >
-                                                        {slot}
+                                                        {slot.label}
                                                     </span>
-
-                                                    {/* Status */}
                                                     <span
                                                         className={`text-xs ${
                                                             isBooked
@@ -299,6 +456,7 @@ const BookingSection = ({
                                         })}
                                     </div>
                                 </div>
+
                                 <motion.div
                                     className="mt-8"
                                     initial={false}
@@ -309,7 +467,11 @@ const BookingSection = ({
                                     <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                                         <Button
                                             size="lg"
-                                            className="w-full cursor-pointer bg-gradient-to-r from-[#0e96b8] to-[#5acde7] py-6 text-base text-white hover:from-[#0c84a0] hover:to-[#4fc3e0] sm:flex-1"
+                                            className={`w-full bg-gradient-to-r from-[#0e96b8] to-[#5acde7] py-6 text-base text-white hover:from-[#0c84a0] hover:to-[#4fc3e0] sm:flex-1 ${
+                                                !selectedTime
+                                                    ? 'cursor-not-allowed opacity-50'
+                                                    : 'cursor-pointer'
+                                            }`}
                                             disabled={!selectedTime}
                                             onClick={handleConfirm}
                                         >
@@ -324,6 +486,9 @@ const BookingSection = ({
                                             onClick={() => {
                                                 setSelectedCourt(null);
                                                 setSelectedTime(null);
+                                                localStorage.removeItem(
+                                                    'pendingBooking',
+                                                );
                                             }}
                                         >
                                             Cancel
@@ -334,6 +499,16 @@ const BookingSection = ({
                         </motion.div>
                     )}
                 </AnimatePresence>
+            </div>
+
+            <div className="fixed right-6 bottom-6 z-50">
+                <button
+                    onClick={() => setShowMyBookings(!showMyBookings)}
+                    className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#0e96b8] to-[#5acde7] px-5 py-3 text-white shadow-lg transition hover:from-[#0c84a0] hover:to-[#4fc3e0]"
+                >
+                    <Calendar className="h-5 w-5" />
+                    {showMyBookings ? 'Back to Courts' : 'My Bookings'}
+                </button>
             </div>
         </section>
     );

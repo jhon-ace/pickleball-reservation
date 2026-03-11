@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;    
 
 /*
 |--------------------------------------------------------------------------
@@ -19,8 +20,16 @@ Route::get('/court-admin', function () {
     return Inertia::render('Index');
 });
 
+//api routes
+Route::get('/courts', [AuthController::class, 'court']);
+Route::get('/courts/count', [AuthController::class, 'courtCount']);
+Route::get('/bookings/time', [AuthController::class, 'times']);
 
-
+//bookings
+Route::post('/bookings', [BookingController::class, 'store'])->middleware('auth');
+Route::get('/bookings/slots', [BookingController::class, 'slots']);
+Route::get('/bookings/my-bookings', [BookingController::class, 'myBookings'])
+    ->middleware('auth');
 /*
 |--------------------------------------------------------------------------
 | Guest Routes (Only for non-authenticated users)
@@ -58,8 +67,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-reservations', function () {
         return Inertia::render('MyReservations');
     });
-
-    Route::get('/', [CourtController::class, 'index']);
 
 });
 

@@ -1,9 +1,19 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock } from 'lucide-react';
 import heroImage from '../../../../public/assets/img/hero-courts.jpg';
 
 const HeroSection = ({ onBookNow }: { onBookNow: () => void }) => {
+    const [courtCount, setCourtCount] = useState(0);
+
+    useEffect(() => {
+        fetch('/courts/count')
+            .then((res) => res.json())
+            .then((data) => setCourtCount(data.count))
+            .catch((err) => console.error(err));
+    }, []);
+
     return (
         <section className="relative flex min-h-[100vh] items-center overflow-hidden">
             <div className="absolute inset-0">
@@ -91,7 +101,7 @@ const HeroSection = ({ onBookNow }: { onBookNow: () => void }) => {
                         {[
                             {
                                 icon: MapPin,
-                                label: '8 Courts',
+                                label: `${courtCount} Courts`,
                                 sub: 'Indoor & Outdoor',
                             },
                             {

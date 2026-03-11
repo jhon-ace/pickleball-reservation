@@ -11,6 +11,11 @@ import toast, { Toaster } from 'react-hot-toast';
 
 const Index = () => {
     const bookingRef = useRef<HTMLDivElement>(null!);
+    const [showMyBookings, setShowMyBookings] = useState(false);
+    const [bookingStatus, setBookingStatus] = useState<'none' | 'pending'>(
+        'none',
+    );
+    const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
     const { flash } = usePage().props as any;
 
     useEffect(() => {

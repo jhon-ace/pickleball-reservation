@@ -40,16 +40,6 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
         return (
             <div className="flex items-center gap-3">
                 {!isAdmin && (
-                    <Button
-                        className="cursor-pointer bg-background text-white hover:text-black"
-                        size="sm"
-                        onClick={() => router.visit('/my-reservations')}
-                    >
-                        <Calendar className="mr-1 h-4 w-4" /> My Bookings
-                    </Button>
-                )}
-
-                {!isAdmin && (
                     <span className="flex items-center gap-1 font-medium text-black">
                         <User className="h-4 w-4" /> {user?.name ?? 'Guest'}
                     </span>
@@ -179,20 +169,6 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
 
                             {user ? (
                                 <>
-                                    {!isAdmin && (
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            className="w-full"
-                                            onClick={() =>
-                                                router.visit('/my-reservations')
-                                            }
-                                        >
-                                            <Calendar className="mr-1 h-4 w-4" />{' '}
-                                            My Bookings
-                                        </Button>
-                                    )}
-
                                     {isAdmin && (
                                         <Button
                                             variant="outline"

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
 use App\Models\Court;
+use App\Models\Time;
 use Inertia\Inertia;
 
 class AuthController extends Controller
@@ -112,5 +113,20 @@ class AuthController extends Controller
     {
         $courts = Court::select('id', 'name', 'type', 'surface', 'image', 'available')->get();
         return response()->json($courts);
+    }
+
+    public function courtCount()
+    {
+        $count = Court::count();
+
+        return response()->json([
+            'count' => $count
+        ]);
+    }
+
+    public function times()
+    {
+        $times = Time::select('id','start_time', 'label','status')->get();
+        return response()->json($times);
     }
 }
