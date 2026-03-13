@@ -6,9 +6,10 @@ import CourtCard, { type Court } from './CourtCard';
 import { usePage } from '@inertiajs/react';
 import toast from 'react-hot-toast';
 import MyBookings from './MyBooking';
-
 import { safeFetch } from '../../utils/safeFetch';
 import AdminCourtTracker from './AdminCourtTracker';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 type Time = {
     id: number;
@@ -20,7 +21,12 @@ type BookedSlot = {
     is_pending: boolean;
     user_id: number;
 };
-
+const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 const BookingSection = ({
     sectionRef,
 }: {
@@ -31,9 +37,10 @@ const BookingSection = ({
     const [loading, setLoading] = useState(true);
     const { props } = usePage<any>();
     const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
-    const [selectedDate, setSelectedDate] = useState(
-        new Date().toLocaleDateString('en-CA'),
-    );
+    const today = new Date();
+    const [startDate, setStartDate] = useState(today);
+
+    const [selectedDate, setSelectedDate] = useState(formatDate(today));
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [bookedSlots, setBookedSlots] = useState<BookedSlot[]>([]);
     const [bookingStatus, setBookingStatus] = useState<
@@ -43,7 +50,6 @@ const BookingSection = ({
     const [referenceNumber, setReferenceNumber] = useState<string | null>(null);
     const [showMyBookings, setShowMyBookings] = useState(false);
 
-    const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
@@ -235,6 +241,12 @@ const BookingSection = ({
         if (mode === 'open') return hour >= 20 && hour < 23;
 
         return true;
+    };
+
+    const handleDateChange = (date: Date | null) => {
+        if (!date) return;
+        setStartDate(date);
+        setSelectedDate(formatDate(date)); // ensures server fetch uses local date
     };
 
     return (
@@ -470,24 +482,19 @@ const BookingSection = ({
                                             {selectedCourt.surface} surface
                                         </p>
 
-                                        <div className="mb-6">
-                                            <label className="mb-2 block text-sm font-medium text-black">
-                                                Choose Date
-                                                <input
-                                                    type="date"
-                                                    value={selectedDate}
-                                                    onChange={(e) =>
-                                                        setSelectedDate(
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    onKeyDown={(e) =>
-                                                        e.preventDefault()
-                                                    }
-                                                    min={minDate}
-                                                    className="ml-3 w-1/2 cursor-pointer rounded-lg bg-gradient-to-r from-[#0e96b8] to-[#5acde7] px-2 py-2 text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
-                                                />
+                                        <div className="mb-6 w-full max-w-sm">
+                                            <label className="mb-1 block text-sm font-semibold text-gray-700">
+                                                Select Date
                                             </label>
+                                            <DatePicker
+                                                selected={startDate}
+                                                onChange={handleDateChange}
+                                                className="w-full cursor-pointer rounded-lg border border-gray-300 bg-gray-500 px-4 py-2 text-sm font-bold text-gray-900 text-white transition hover:bg-white hover:text-black focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
+                                                dateFormat="MMMM d, yyyy" // Display like "March 14"
+                                                todayButton="Today"
+                                                placeholderText="Select a date"
+                                                minDate={new Date()} // <-- Restrict past dates
+                                            />
                                         </div>
                                         <div className="mb-5 flex flex-wrap gap-2">
                                             <button
@@ -571,7 +578,6 @@ const BookingSection = ({
                                                             ) {
                                                                 // Pending booking
                                                                 if (!user) {
-                                                                    // Not logged in
                                                                     statusText =
                                                                         'Unavailable';
                                                                     statusColor =
@@ -581,14 +587,12 @@ const BookingSection = ({
                                                                     user.id ===
                                                                     booking.user_id
                                                                 ) {
-                                                                    // Logged-in user is the one who booked
                                                                     statusText =
                                                                         'Pending';
                                                                     statusColor =
                                                                         'text-yellow-500';
-                                                                    isDisabled = true; // optionally false if you want editing
+                                                                    isDisabled = true;
                                                                 } else {
-                                                                    // Logged-in user is NOT the one who booked
                                                                     statusText =
                                                                         'Unavailable';
                                                                     statusColor =
@@ -606,7 +610,7 @@ const BookingSection = ({
                                                                         'Confirmed';
                                                                     statusColor =
                                                                         'text-green-600';
-                                                                    isDisabled = true; // prevent clicking
+                                                                    isDisabled = true;
                                                                 } else {
                                                                     statusText =
                                                                         'Taken';
@@ -633,6 +637,15 @@ const BookingSection = ({
                                                             statusColor =
                                                                 'text-white';
                                                         }
+
+                                                        // Determine if the label should be struck through
+                                                        const isStrikethrough =
+                                                            statusText ===
+                                                                'Taken' &&
+                                                            (!user ||
+                                                                (user &&
+                                                                    user.id !==
+                                                                        booking?.user_id));
 
                                                         return (
                                                             <motion.button
@@ -682,7 +695,9 @@ const BookingSection = ({
                                                                           : 'cursor-pointer border-border bg-white text-black hover:border-black'
                                                                 }`}
                                                             >
-                                                                <span className="font-semibold">
+                                                                <span
+                                                                    className={`font-semibold ${isStrikethrough ? 'line-through' : ''}`}
+                                                                >
                                                                     {slot.label}
                                                                 </span>
                                                                 <span
@@ -693,142 +708,6 @@ const BookingSection = ({
                                                             </motion.button>
                                                         );
                                                     })}
-                                                {/* {times
-                                                    .filter((slot) =>
-                                                        filterTimesByMode(
-                                                            slot.label,
-                                                        ),
-                                                    )
-                                                    .map((slot) => {
-                                                        const booking =
-                                                            bookedSlots.find(
-                                                                (b) =>
-                                                                    b.time_id ===
-                                                                    slot.id,
-                                                            );
-
-                                                        // Default slot values
-                                                        let statusText =
-                                                            'Available';
-                                                        let statusColor =
-                                                            'text-green-600';
-                                                        let isDisabled = false;
-
-                                                        if (booking) {
-                                                            if (
-                                                                booking.is_pending
-                                                            ) {
-                                                                // Pending booking
-                                                                if (!user) {
-                                                                    // Not logged in
-                                                                    statusText =
-                                                                        'Unavailable';
-                                                                    statusColor =
-                                                                        'text-gray-900';
-                                                                    isDisabled = true;
-                                                                } else if (
-                                                                    user.id ===
-                                                                    booking.user_id
-                                                                ) {
-                                                                    // Logged-in user is the one who booked
-                                                                    statusText =
-                                                                        'Pending';
-                                                                    statusColor =
-                                                                        'text-yellow-500';
-                                                                    isDisabled = true; // optionally false if you want to allow editing
-                                                                } else {
-                                                                    // Logged-in user is NOT the one who booked
-                                                                    statusText =
-                                                                        'Unavailable';
-                                                                    statusColor =
-                                                                        'text-gray-900';
-                                                                    isDisabled = true;
-                                                                }
-                                                            } else {
-                                                                // Confirmed booking
-                                                                statusText =
-                                                                    'Taken';
-                                                                statusColor =
-                                                                    'text-red-500';
-                                                                isDisabled = true;
-                                                            }
-                                                        }
-
-                                                        const isSelected =
-                                                            mode === 'open'
-                                                                ? selectedTimes.includes(
-                                                                      slot.label,
-                                                                  )
-                                                                : selectedTime ===
-                                                                  slot.label;
-
-                                                        if (
-                                                            !isDisabled &&
-                                                            isSelected
-                                                        ) {
-                                                            statusColor =
-                                                                'text-white';
-                                                        }
-
-                                                        return (
-                                                            <motion.button
-                                                                key={slot.id}
-                                                                disabled={
-                                                                    isDisabled
-                                                                }
-                                                                onClick={() => {
-                                                                    if (
-                                                                        isDisabled
-                                                                    )
-                                                                        return;
-                                                                    if (
-                                                                        mode ===
-                                                                        'open'
-                                                                    ) {
-                                                                        setSelectedTimes(
-                                                                            (
-                                                                                prev,
-                                                                            ) =>
-                                                                                prev.includes(
-                                                                                    slot.label,
-                                                                                )
-                                                                                    ? prev.filter(
-                                                                                          (
-                                                                                              t,
-                                                                                          ) =>
-                                                                                              t !==
-                                                                                              slot.label,
-                                                                                      )
-                                                                                    : [
-                                                                                          ...prev,
-                                                                                          slot.label,
-                                                                                      ],
-                                                                        );
-                                                                    } else {
-                                                                        setSelectedTime(
-                                                                            slot.label,
-                                                                        );
-                                                                    }
-                                                                }}
-                                                                className={`flex flex-col items-center justify-center rounded-lg border px-2 py-3 text-sm font-medium transition-all duration-200 ${
-                                                                    isDisabled
-                                                                        ? 'cursor-not-allowed border-border bg-white text-red-500'
-                                                                        : isSelected
-                                                                          ? 'animate-pulse-glow border-transparent bg-blue-500 text-white shadow-lg'
-                                                                          : 'cursor-pointer border-border bg-white text-black hover:border-black'
-                                                                }`}
-                                                            >
-                                                                <span className="font-semibold">
-                                                                    {slot.label}
-                                                                </span>
-                                                                <span
-                                                                    className={`text-xs ${statusColor}`}
-                                                                >
-                                                                    {statusText}
-                                                                </span>
-                                                            </motion.button>
-                                                        );
-                                                    })} */}
                                             </div>
                                         </div>
 

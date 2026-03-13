@@ -58,6 +58,9 @@ import toast, { Toaster } from 'react-hot-toast';
 const Index = () => {
     const bookingRef = useRef<HTMLDivElement>(null!);
     const { flash, auth } = usePage().props as any;
+    const { props } = usePage<any>();
+    const user = props.auth?.user;
+    const isAdmin = Boolean(user?.is_admin);
 
     // Global modal state
     const [showBookingsModal, setShowBookingsModal] = useState(false);
@@ -79,8 +82,13 @@ const Index = () => {
                 setShowModal={setShowBookingsModal}
                 auth={auth}
             />
-
-            <HeroSection onBookNow={scrollToBooking} />
+            {isAdmin ? (
+                <></>
+            ) : (
+                <>
+                    <HeroSection onBookNow={scrollToBooking} />
+                </>
+            )}
 
             <BookingSection sectionRef={bookingRef} />
 
