@@ -12,26 +12,26 @@ const features = [
         title: 'Real-Time Availability',
         desc: 'See live court status so you never show up to a taken court.',
     },
-    {
-        icon: Users,
-        title: 'Find Partners',
-        desc: 'Match with players at your skill level in your area.',
-    },
+    // {
+    //     icon: Users,
+    //     title: 'Find Partners',
+    //     desc: 'Match with players at your skill level in your area.',
+    // },
     {
         icon: Shield,
         title: 'Secure Payments',
         desc: 'Pay safely online — no cash, no hassle at the front desk.',
     },
-    {
-        icon: Clock,
-        title: 'Flexible Scheduling',
-        desc: 'Book recurring slots or drop in anytime from 6AM to 10PM.',
-    },
-    {
-        icon: Star,
-        title: 'Player Ratings',
-        desc: 'Track your progress and see how you rank in the community.',
-    },
+    // {
+    //     icon: Clock,
+    //     title: 'Flexible Scheduling',
+    //     desc: 'Book recurring slots or drop in anytime from 6AM to 10PM.',
+    // },
+    // {
+    //     icon: Star,
+    //     title: 'Player Ratings',
+    //     desc: 'Track your progress and see how you rank in the community.',
+    // },
 ];
 
 const FeaturesSection = () => (

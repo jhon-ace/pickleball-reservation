@@ -4,8 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Menu, X, User, LogOut, Shield, Calendar } from 'lucide-react';
 import { router, usePage, Link } from '@inertiajs/react';
 import toast from 'react-hot-toast';
+interface NavbarProps {
+    onBookNow: () => void;
+    setShowModal: (val: boolean) => void; // Add this
+    auth?: any; // Pass auth so it can check user
+}
 
-const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
+const Navbar = ({ onBookNow, setShowModal, auth }: NavbarProps) => {
+    // const [showModal, setShowModal] = useState(false);
     const [open, setOpen] = useState(false);
     const { props } = usePage<any>();
     const user = props.auth?.user;
@@ -108,6 +114,15 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                                 Book Now
                             </Button>
                         )}
+                        {props.auth?.user && (
+                            <Button
+                                size="sm"
+                                onClick={() => setShowModal(true)}
+                                className="bg-gradient-to-r from-[#0e96b8] to-[#5acde7] text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
+                            >
+                                My Bookings
+                            </Button>
+                        )}
 
                         {renderUserMenu()}
                     </div>
@@ -166,6 +181,15 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                                     Book Now
                                 </Button>
                             )}
+                            {props.auth?.user && (
+                                <Button
+                                    size="sm"
+                                    onClick={() => setShowModal(true)}
+                                    className="bg-gradient-to-r from-[#0e96b8] to-[#5acde7] text-white hover:from-[#0c84a0] hover:to-[#4fc3e0]"
+                                >
+                                    My Bookings
+                                </Button>
+                            )}
 
                             {user ? (
                                 <>
@@ -207,6 +231,7 @@ const Navbar = ({ onBookNow }: { onBookNow: () => void }) => {
                     </motion.div>
                 )}
             </AnimatePresence>
+            {/*  */}
         </nav>
     );
 };

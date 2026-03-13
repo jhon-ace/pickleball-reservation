@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
 import { Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { safeFetch } from '../utils/safeFetch';
 
 type AuthMode = 'signin' | 'signup' | 'forgot';
 
@@ -16,72 +17,171 @@ const Auth = () => {
     const [loading, setLoading] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
 
-    const handleSignIn = (e: React.FormEvent) => {
+    // const handleSignIn = (e: React.FormEvent) => {
+    //     e.preventDefault();
+    //     setLoading(true);
+    //     setFormError(null);
+
+    //     router.post(
+    //         '/login',
+    //         { email, password },
+    //         {
+    //             onSuccess: () => {
+    //                 toast.success('Signed in successfully!');
+    //             },
+    //             onError: (errors: any) => {
+    //                 if (errors.email) {
+    //                     setFormError(
+    //                         Array.isArray(errors.email)
+    //                             ? errors.email[0]
+    //                             : errors.email,
+    //                     );
+    //                 } else {
+    //                     setFormError('Sign in failed.');
+    //                 }
+    //             },
+    //             onFinish: () => setLoading(false),
+    //         },
+    //     );
+    // };
+
+    // const handleSignUp = (e: React.FormEvent) => {
+    //     e.preventDefault();
+    //     setLoading(true);
+    //     setFormError(null);
+
+    //     router.post(
+    //         '/register',
+    //         { name: fullName, email, password },
+    //         {
+    //             onSuccess: () => {
+    //                 toast.success('Account created successfully!');
+    //             },
+    //             onError: (errors: any) => {
+    //                 if (errors.name) {
+    //                     setFormError(
+    //                         Array.isArray(errors.name)
+    //                             ? errors.name[0]
+    //                             : errors.name,
+    //                     );
+    //                 } else if (errors.email) {
+    //                     setFormError(
+    //                         Array.isArray(errors.email)
+    //                             ? errors.email[0]
+    //                             : errors.email,
+    //                     );
+    //                 } else if (errors.password) {
+    //                     setFormError(
+    //                         Array.isArray(errors.password)
+    //                             ? errors.password[0]
+    //                             : errors.password,
+    //                     );
+    //                 } else {
+    //                     setFormError('Sign up failed.');
+    //                 }
+    //             },
+    //             onFinish: () => setLoading(false),
+    //         },
+    //     );
+    // };
+
+    const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setFormError(null);
 
-        router.post(
-            '/login',
-            { email, password },
-            {
-                onSuccess: () => {
-                    toast.success('Signed in successfully!');
+        try {
+            // Step 1: Refresh CSRF before login
+            await safeFetch('/sanctum/csrf-cookie');
+
+            // Step 2: Login via Inertia
+            router.post(
+                '/login',
+                { email, password },
+                {
+                    onSuccess: async () => {
+                        // Step 3: Refresh CSRF after login
+                        await safeFetch('/sanctum/csrf-cookie');
+
+                        // Step 4: Force page reload to update CSRF meta tag
+                        window.location.reload();
+                    },
+                    onError: (errors: any) => {
+                        if (errors.email) {
+                            setFormError(
+                                Array.isArray(errors.email)
+                                    ? errors.email[0]
+                                    : errors.email,
+                            );
+                        } else {
+                            setFormError('Sign in failed.');
+                        }
+                    },
+                    onFinish: () => {
+                        // toast.success('Signed in successfully!');
+                        setLoading(false);
+                    },
                 },
-                onError: (errors: any) => {
-                    if (errors.email) {
-                        setFormError(
-                            Array.isArray(errors.email)
-                                ? errors.email[0]
-                                : errors.email,
-                        );
-                    } else {
-                        setFormError('Sign in failed.');
-                    }
-                },
-                onFinish: () => setLoading(false),
-            },
-        );
+            );
+        } catch (err) {
+            console.error(err);
+            setFormError('Sign in failed.');
+            setLoading(false);
+        }
     };
 
-    const handleSignUp = (e: React.FormEvent) => {
+    const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setFormError(null);
 
-        router.post(
-            '/register',
-            { name: fullName, email, password },
-            {
-                onSuccess: () => {
-                    toast.success('Account created successfully!');
+        try {
+            // Step 1: Refresh CSRF before registration
+            await safeFetch('/sanctum/csrf-cookie');
+
+            // Step 2: Register via Inertia
+            router.post(
+                '/register',
+                { name: fullName, email, password },
+                {
+                    onSuccess: async () => {
+                        toast.success('Account created successfully!');
+
+                        // Step 3: Refresh CSRF after signup
+                        await safeFetch('/sanctum/csrf-cookie');
+
+                        // Step 4: Force page reload to update CSRF meta tag
+                        window.location.reload();
+                    },
+                    onError: (errors: any) => {
+                        if (errors.name) {
+                            setFormError(
+                                Array.isArray(errors.name)
+                                    ? errors.name[0]
+                                    : errors.name,
+                            );
+                        } else if (errors.email) {
+                            setFormError(
+                                Array.isArray(errors.email)
+                                    ? errors.email[0]
+                                    : errors.email,
+                            );
+                        } else if (errors.password) {
+                            setFormError(
+                                Array.isArray(errors.password)
+                                    ? errors.password[0]
+                                    : errors.password,
+                            );
+                        } else setFormError('Sign up failed.');
+                    },
+                    onFinish: () => setLoading(false),
                 },
-                onError: (errors: any) => {
-                    if (errors.name) {
-                        setFormError(
-                            Array.isArray(errors.name)
-                                ? errors.name[0]
-                                : errors.name,
-                        );
-                    } else if (errors.email) {
-                        setFormError(
-                            Array.isArray(errors.email)
-                                ? errors.email[0]
-                                : errors.email,
-                        );
-                    } else if (errors.password) {
-                        setFormError(
-                            Array.isArray(errors.password)
-                                ? errors.password[0]
-                                : errors.password,
-                        );
-                    } else {
-                        setFormError('Sign up failed.');
-                    }
-                },
-                onFinish: () => setLoading(false),
-            },
-        );
+            );
+        } catch (err) {
+            console.error(err);
+            setFormError('Sign up failed.');
+            setLoading(false);
+        }
     };
 
     const handleForgotPassword = (e: React.FormEvent) => {

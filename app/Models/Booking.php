@@ -14,8 +14,9 @@ class Booking extends Model
         'user_id',
         'date',
         'time',
+        'mode',
         'status',
-        'is_pending',
+        'is_pending'
     ];
 
     public function court()

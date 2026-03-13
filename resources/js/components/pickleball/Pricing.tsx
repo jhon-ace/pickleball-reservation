@@ -4,48 +4,45 @@ import { Check } from 'lucide-react';
 
 const plans = [
     {
-        name: 'Drop-In',
-        price: '$8',
-        period: 'per session',
-        desc: 'Perfect for casual players who want to play when they feel like it.',
+        name: 'Open Play (per person)',
+        price: '₱200',
+        period: 'per person',
+        desc: 'Perfect for casual players who want to enjoy a fun and relaxed game with others.',
         features: [
-            'Single court booking',
-            'Standard hours (8AM–6PM)',
+            '8:00 PM – 11:00 PM session',
+            '1 court (max 12 players)',
+            'Join casual group play',
             'Online reservation',
-            'Basic player profile',
         ],
-        cta: 'Get Started',
+        cta: 'Book Now',
         featured: false,
     },
     {
-        name: 'Pro',
-        price: '$49',
-        period: 'per month',
-        desc: 'For dedicated players who play multiple times a week.',
+        name: 'Day Time (AM-PM)',
+        price: '₱300',
+        period: 'per hour',
+        desc: 'For dedicated players in the morning and afternoon.',
         features: [
-            'Unlimited bookings',
-            'Priority hours (6AM–10PM)',
-            'Partner matching',
-            'Player ratings & stats',
-            'Guest passes (2/mo)',
+            '5:00 AM – 5:00 PM',
+            'Private court booking',
+            'Flexible play schedule',
+            'Online reservation',
         ],
-        cta: 'Go Pro',
+        cta: 'Book Now',
         featured: true,
     },
     {
-        name: 'VIP',
-        price: '$99',
-        period: 'per month',
-        desc: 'The ultimate experience for serious pickleball enthusiasts.',
+        name: 'Evening / Night (PM)',
+        price: '₱350',
+        period: 'per hour',
+        desc: 'For players who prefer playing in the evening or late at night.',
         features: [
-            'Everything in Pro',
-            'Private court reservations',
-            'Coaching session discounts',
-            'Tournament entry included',
-            'Unlimited guest passes',
-            'Locker & towel service',
+            '5:00 PM – 12:00 AM',
+            'Private court booking',
+            'Flexible play schedule',
+            'Online reservation',
         ],
-        cta: 'Join VIP',
+        cta: 'Book Now',
         featured: false,
     },
 ];
@@ -152,6 +149,12 @@ const Pricing = () => (
                                         ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700'
                                         : 'bg-gradient-to-r from-[#0e96b8] to-[#5acde7] hover:from-[#0c84a0] hover:to-[#4fc3e0]'
                                 }`}
+                                onClick={() => {
+                                    window.scrollTo({
+                                        top: 800,
+                                        behavior: 'smooth',
+                                    });
+                                }}
                             >
                                 {plan.cta}
                             </Button>

@@ -13,19 +13,43 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
+
+            $table->string('reference_number');
+
             $table->unsignedBigInteger('court_id');
             $table->unsignedBigInteger('user_id');
+
             $table->date('date');
-            $table->string('time');
+            $table->time('time');
+
+            $table->string('mode'); // day, night, open
+
             $table->string('status')->default('Pending');
             $table->boolean('is_pending')->default(true);
+
             $table->timestamps();
 
             $table->foreign('court_id')->references('id')->on('courts')->cascadeOnDelete();
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
 
-            $table->unique(['court_id', 'date', 'time']); 
+            $table->unique(['court_id', 'date', 'time']);
         });
+
+        // Schema::create('bookings', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->unsignedBigInteger('court_id');
+        //     $table->unsignedBigInteger('user_id');
+        //     $table->date('date');
+        //     $table->string('time');
+        //     $table->string('status')->default('Pending');
+        //     $table->boolean('is_pending')->default(true);
+        //     $table->timestamps();
+
+        //     $table->foreign('court_id')->references('id')->on('courts')->cascadeOnDelete();
+        //     $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+
+        //     $table->unique(['court_id', 'date', 'time']); 
+        // });
     }
 
     /**

@@ -5,7 +5,10 @@ import { Calendar, Clock, CheckCircle2 } from 'lucide-react';
 import CourtCard, { type Court } from './CourtCard';
 import { usePage } from '@inertiajs/react';
 import toast from 'react-hot-toast';
+import MyBookingsModal from './MyBookingsModal';
 import MyBookings from './MyBooking';
+
+import { safeFetch } from '../../utils/safeFetch';
 
 type Time = {
     id: number;
@@ -17,13 +20,14 @@ const BookingSection = ({
 }: {
     sectionRef: React.RefObject<HTMLDivElement>;
 }) => {
+    const [showModal, setShowModal] = useState(false);
     const [courts, setCourts] = useState<Court[]>([]);
     const [times, setTimes] = useState<Time[]>([]);
     const [loading, setLoading] = useState(true);
     const { props } = usePage<any>();
     const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
-    const [selectedDate, setSelectedDate] = useState<string>(
-        new Date().toISOString().split('T')[0],
+    const [selectedDate, setSelectedDate] = useState(
+        new Date().toLocaleDateString('en-CA'),
     );
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [bookedSlots, setBookedSlots] = useState<string[]>([]);
@@ -38,6 +42,9 @@ const BookingSection = ({
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     const minDate = `${yyyy}-${mm}-${dd}`;
+
+    const [mode, setMode] = useState<'day' | 'night' | 'open'>('day');
+    const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
 
     // Fetch courts
     useEffect(() => {
@@ -75,15 +82,37 @@ const BookingSection = ({
 
     // Load pending booking from localStorage
     useEffect(() => {
+        const user = props.auth?.user;
+
+        if (!user) return;
+
         const stored = localStorage.getItem('pendingBooking');
+
         if (stored) {
-            const { court, date, time } = JSON.parse(stored);
+            const { court, date, mode, times } = JSON.parse(stored);
+
             setSelectedCourt(court);
             setSelectedDate(date);
-            setSelectedTime(time);
+            setMode(mode as 'day' | 'night' | 'open');
+
+            if (mode === 'open') {
+                setSelectedTimes(times || []);
+                setSelectedTime(null);
+            } else {
+                setSelectedTime(times?.[0] || null);
+                setSelectedTimes([]);
+            }
+
+            console.log('Restored booking:', court, date, mode, times);
+
             localStorage.removeItem('pendingBooking');
+
+            sectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+
+            // Optionally show a toast
+            // toast.success('Your selected booking was restored!');
         }
-    }, []);
+    }, [props.auth?.user]);
 
     const handleSelectCourt = (court: Court) => setSelectedCourt(court);
 
@@ -97,8 +126,179 @@ const BookingSection = ({
         return `${hours.padStart(2, '0')}:${minutes}:00`;
     };
 
+    // const handleConfirm = async () => {
+    //     if (!selectedCourt || !selectedTime) return;
+    //     if (mode === 'open' && selectedTimes.length === 0) return;
+
+    //     if (mode !== 'open' && !selectedTime) return;
+    //     const user = props.auth?.user;
+    //     if (!user) {
+    //         localStorage.setItem(
+    //             'pendingBooking',
+    //             JSON.stringify({
+    //                 court: selectedCourt,
+    //                 date: selectedDate,
+    //                 mode: mode,
+    //                 times: mode === 'open' ? selectedTimes : [selectedTime],
+    //             }),
+    //         );
+    //         toast(
+    //             'Please sign up or log in to confirm your reservation.Redirecting...',
+    //             {
+    //                 icon: '⚠️',
+    //                 duration: 2500,
+    //                 style: { background: '#f97316', color: 'white' },
+    //             },
+    //         );
+    //         setTimeout(() => (window.location.href = '/auth'), 2500);
+    //         return;
+    //     }
+
+    //     try {
+    //         const res = await fetch('/bookings', {
+    //             method: 'POST',
+    //             credentials: 'same-origin',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'X-CSRF-TOKEN':
+    //                     document
+    //                         .querySelector('meta[name="csrf-token"]')
+    //                         ?.getAttribute('content') || '',
+    //                 Accept: 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //                 court_id: selectedCourt.id,
+    //                 date: selectedDate,
+    //                 mode: mode,
+    //                 times:
+    //                     mode === 'open'
+    //                         ? selectedTimes.map((t) => formatTime(t))
+    //                         : [formatTime(selectedTime!)],
+    //             }),
+    //         });
+
+    //         const data = await res.json();
+    //         if (data.success) {
+    //             setReferenceNumber(data.booking.reference_number);
+    //             setBookingStatus(
+    //                 data.booking.is_pending ? 'pending' : 'confirmed',
+    //             );
+    //         } else {
+    //             toast.error('Booking failed!');
+    //         }
+    //     } catch (err) {
+    //         console.error(err);
+    //         toast.error('Something went wrong!');
+    //     }
+    // };
+
+    // const handleConfirm = async () => {
+    //     if (!selectedCourt) return;
+
+    //     if (mode === 'open' && selectedTimes.length === 0) return;
+
+    //     if (mode !== 'open' && !selectedTime) return;
+
+    //     const user = props.auth?.user;
+
+    //     if (!user) {
+    //         localStorage.setItem(
+    //             'pendingBooking',
+    //             JSON.stringify({
+    //                 court: selectedCourt,
+    //                 date: selectedDate,
+    //                 mode: mode,
+    //                 times: mode === 'open' ? selectedTimes : [selectedTime],
+    //             }),
+    //         );
+
+    //         toast(
+    //             'Please sign up or log in to confirm your reservation. Redirecting...',
+    //             {
+    //                 icon: '⚠️',
+    //                 duration: 2500,
+    //                 style: { background: '#f97316', color: 'white' },
+    //             },
+    //         );
+
+    //         setTimeout(() => (window.location.href = '/auth'), 2500);
+
+    //         return;
+    //     }
+
+    //     try {
+    //         // const res = await fetch('/bookings', {
+    //         //     method: 'POST',
+    //         //     credentials: 'same-origin',
+    //         //     headers: {
+    //         //         'Content-Type': 'application/json',
+    //         //         'X-CSRF-TOKEN':
+    //         //             document
+    //         //                 .querySelector('meta[name="csrf-token"]')
+    //         //                 ?.getAttribute('content') || '',
+    //         //         Accept: 'application/json',
+    //         //     },
+    //         //     body: JSON.stringify({
+    //         //         court_id: selectedCourt.id,
+    //         //         date: selectedDate,
+    //         //         mode: mode,
+    //         //         times:
+    //         //             mode === 'open'
+    //         //                 ? selectedTimes.map((t) => formatTime(t))
+    //         //                 : [formatTime(selectedTime!)],
+    //         //     }),
+    //         // });
+    //         const csrfToken = document
+    //             .querySelector('meta[name="csrf-token"]')
+    //             ?.getAttribute('content');
+
+    //         const res = await fetch('/bookings', {
+    //             method: 'POST',
+    //             credentials: 'include',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'X-CSRF-TOKEN': csrfToken || '',
+    //                 Accept: 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //                 court_id: selectedCourt.id,
+    //                 date: selectedDate,
+    //                 mode: mode,
+    //                 times:
+    //                     mode === 'open'
+    //                         ? selectedTimes.map((t) => formatTime(t))
+    //                         : [formatTime(selectedTime!)],
+    //             }),
+    //         });
+
+    //         if (!res.ok) {
+    //             const err = await res.json();
+    //             console.error(err);
+    //             toast.error(err.message || 'Booking failed');
+    //             return;
+    //         }
+
+    //         const data = await res.json();
+
+    //         if (data.success) {
+    //             setReferenceNumber(data.booking.reference_number);
+    //             setBookingStatus(
+    //                 data.booking.is_pending ? 'pending' : 'confirmed',
+    //             );
+    //         } else {
+    //             toast.error('Booking failed!');
+    //         }
+    //     } catch (err) {
+    //         console.error(err);
+    //         toast.error('Something went wrong!');
+    //     }
+    // };
+
     const handleConfirm = async () => {
-        if (!selectedCourt || !selectedTime) return;
+        if (!selectedCourt) return;
+        if (mode === 'open' && selectedTimes.length === 0) return;
+        if (mode !== 'open' && !selectedTime) return;
+
         const user = props.auth?.user;
         if (!user) {
             localStorage.setItem(
@@ -106,36 +306,44 @@ const BookingSection = ({
                 JSON.stringify({
                     court: selectedCourt,
                     date: selectedDate,
-                    time: formatTime(selectedTime),
+                    mode: mode,
+                    times: mode === 'open' ? selectedTimes : [selectedTime],
                 }),
             );
-            toast('Please sign up or log in to confirm your reservation.', {
-                icon: '⚠️',
-                duration: 2500,
-                style: { background: '#f97316', color: 'white' },
-            });
+
+            toast(
+                'Please sign up or log in to confirm your reservation. Redirecting...',
+                {
+                    icon: '⚠️',
+                    duration: 2500,
+                    style: { background: '#f97316', color: 'white' },
+                },
+            );
+
             setTimeout(() => (window.location.href = '/auth'), 2500);
             return;
         }
 
         try {
-            const res = await fetch('/bookings', {
+            const res = await safeFetch('/bookings', {
                 method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') || '',
-                    Accept: 'application/json',
-                },
                 body: JSON.stringify({
                     court_id: selectedCourt.id,
                     date: selectedDate,
-                    time: formatTime(selectedTime),
+                    mode: mode,
+                    times:
+                        mode === 'open'
+                            ? selectedTimes.map((t) => formatTime(t))
+                            : [formatTime(selectedTime!)],
                 }),
             });
+
+            if (!res.ok) {
+                const err = await res.json();
+                console.error(err);
+                toast.error(err.message || 'Booking failed');
+                return;
+            }
 
             const data = await res.json();
             if (data.success) {
@@ -148,8 +356,22 @@ const BookingSection = ({
             }
         } catch (err) {
             console.error(err);
-            toast.error('Something went wrong!');
+            toast.error('Something went wrong! Try refreshing the page.');
         }
+    };
+
+    const filterTimesByMode = (timeLabel: string) => {
+        const [time, modifier] = timeLabel.split(' ');
+        let [hour] = time.split(':').map(Number);
+
+        if (modifier === 'PM' && hour !== 12) hour += 12;
+        if (modifier === 'AM' && hour === 12) hour = 0;
+
+        if (mode === 'day') return hour >= 5 && hour < 17;
+        if (mode === 'night') return hour >= 17 && hour < 24;
+        if (mode === 'open') return hour >= 20 && hour < 23;
+
+        return true;
     };
 
     return (
@@ -392,68 +614,153 @@ const BookingSection = ({
                                         />
                                     </label>
                                 </div>
+                                <div className="mb-5 flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setMode('day');
+                                            setSelectedTimes([]);
+                                            setSelectedTime(null);
+                                        }}
+                                        className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+                                            mode === 'day'
+                                                ? 'bg-blue-500 text-white'
+                                                : 'bg-gray-500 hover:bg-gray-700'
+                                        }`}
+                                    >
+                                        Day Time
+                                    </button>
 
+                                    <button
+                                        onClick={() => {
+                                            setMode('night');
+                                            setSelectedTimes([]);
+                                            setSelectedTime(null);
+                                        }}
+                                        className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+                                            mode === 'night'
+                                                ? 'bg-purple-500 text-white'
+                                                : 'bg-gray-500 hover:bg-gray-700'
+                                        }`}
+                                    >
+                                        Night Time
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setMode('open');
+                                            setSelectedTimes([]);
+                                            setSelectedTime(null);
+                                        }}
+                                        className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+                                            mode === 'open'
+                                                ? 'bg-green-500 text-white'
+                                                : 'bg-gray-500 hover:bg-gray-700'
+                                        }`}
+                                    >
+                                        Open Play
+                                    </button>
+                                </div>
                                 <div>
                                     <label className="mb-3 block text-sm font-medium text-black">
                                         <Clock className="mr-1 inline h-4 w-4" />{' '}
                                         Available Times
                                     </label>
                                     <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                                        {times.map((slot) => {
-                                            const isBooked =
-                                                bookedSlots.includes(
-                                                    slot.label,
-                                                );
-                                            const isSelected =
-                                                selectedTime === slot.label;
-                                            return (
-                                                <motion.button
-                                                    key={slot.id}
-                                                    whileHover={
-                                                        !isBooked
-                                                            ? { scale: 1.05 }
-                                                            : {}
-                                                    }
-                                                    whileTap={
-                                                        !isBooked
-                                                            ? { scale: 0.95 }
-                                                            : {}
-                                                    }
-                                                    disabled={isBooked}
-                                                    onClick={() =>
-                                                        setSelectedTime(
-                                                            slot.label,
-                                                        )
-                                                    }
-                                                    className={`flex flex-col items-center justify-center rounded-lg border px-2 py-3 text-sm font-medium transition-all duration-200 ${
-                                                        isBooked
-                                                            ? 'cursor-not-allowed border-border bg-white text-red-500'
-                                                            : isSelected
-                                                              ? 'animate-pulse-glow border-transparent bg-blue-500 text-white shadow-lg'
-                                                              : 'cursor-pointer border-border bg-white text-black hover:border-black'
-                                                    }`}
-                                                >
-                                                    <span
-                                                        className={`font-semibold ${isBooked ? 'line-through' : ''}`}
-                                                    >
-                                                        {slot.label}
-                                                    </span>
-                                                    <span
-                                                        className={`text-xs ${
+                                        {times
+                                            .filter((slot) =>
+                                                filterTimesByMode(slot.label),
+                                            )
+                                            .map((slot) => {
+                                                const isBooked =
+                                                    bookedSlots.includes(
+                                                        slot.label,
+                                                    );
+                                                const isSelected =
+                                                    mode === 'open'
+                                                        ? selectedTimes.includes(
+                                                              slot.label,
+                                                          )
+                                                        : selectedTime ===
+                                                          slot.label;
+                                                return (
+                                                    <motion.button
+                                                        key={slot.id}
+                                                        whileHover={
+                                                            !isBooked
+                                                                ? {
+                                                                      scale: 1.05,
+                                                                  }
+                                                                : {}
+                                                        }
+                                                        whileTap={
+                                                            !isBooked
+                                                                ? {
+                                                                      scale: 0.95,
+                                                                  }
+                                                                : {}
+                                                        }
+                                                        disabled={isBooked}
+                                                        onClick={() => {
+                                                            if (
+                                                                mode === 'open'
+                                                            ) {
+                                                                if (
+                                                                    selectedTimes.includes(
+                                                                        slot.label,
+                                                                    )
+                                                                ) {
+                                                                    setSelectedTimes(
+                                                                        selectedTimes.filter(
+                                                                            (
+                                                                                t,
+                                                                            ) =>
+                                                                                t !==
+                                                                                slot.label,
+                                                                        ),
+                                                                    );
+                                                                } else {
+                                                                    setSelectedTimes(
+                                                                        [
+                                                                            ...selectedTimes,
+                                                                            slot.label,
+                                                                        ],
+                                                                    );
+                                                                }
+                                                            } else {
+                                                                setSelectedTime(
+                                                                    slot.label,
+                                                                );
+                                                            }
+                                                        }}
+                                                        className={`flex flex-col items-center justify-center rounded-lg border px-2 py-3 text-sm font-medium transition-all duration-200 ${
                                                             isBooked
-                                                                ? 'text-red-500'
+                                                                ? 'cursor-not-allowed border-border bg-white text-red-500'
                                                                 : isSelected
-                                                                  ? 'text-white'
-                                                                  : 'text-green-600'
+                                                                  ? 'animate-pulse-glow border-transparent bg-blue-500 text-white shadow-lg'
+                                                                  : 'cursor-pointer border-border bg-white text-black hover:border-black'
                                                         }`}
                                                     >
-                                                        {isBooked
-                                                            ? 'Taken'
-                                                            : 'Available'}
-                                                    </span>
-                                                </motion.button>
-                                            );
-                                        })}
+                                                        <span
+                                                            className={`font-semibold ${isBooked ? 'line-through' : ''}`}
+                                                        >
+                                                            {slot.label}
+                                                        </span>
+                                                        <span
+                                                            className={`text-xs ${
+                                                                isBooked
+                                                                    ? 'text-red-500'
+                                                                    : isSelected
+                                                                      ? 'text-white'
+                                                                      : 'text-green-600'
+                                                            }`}
+                                                        >
+                                                            {isBooked
+                                                                ? 'Taken'
+                                                                : 'Available'}
+                                                        </span>
+                                                    </motion.button>
+                                                );
+                                            })}
                                     </div>
                                 </div>
 
@@ -467,16 +774,23 @@ const BookingSection = ({
                                     <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                                         <Button
                                             size="lg"
-                                            className={`w-full bg-gradient-to-r from-[#0e96b8] to-[#5acde7] py-6 text-base text-white hover:from-[#0c84a0] hover:to-[#4fc3e0] sm:flex-1 ${
-                                                !selectedTime
-                                                    ? 'cursor-not-allowed opacity-50'
-                                                    : 'cursor-pointer'
+                                            className={`w-full py-6 text-base text-white ${
+                                                mode === 'open'
+                                                    ? 'bg-green-700 hover:bg-green-600'
+                                                    : 'bg-gradient-to-r from-[#0e96b8] to-[#5acde7] hover:from-[#0c84a0] hover:to-[#4fc3e0]' // Day/Night
                                             }`}
-                                            disabled={!selectedTime}
+                                            disabled={
+                                                mode === 'open'
+                                                    ? selectedTimes.length === 0
+                                                    : !selectedTime
+                                            }
                                             onClick={handleConfirm}
                                         >
                                             <CheckCircle2 className="mr-2 h-5 w-5" />
-                                            {`Confirm Reservation — ${selectedTime || 'Select a time'}`}
+
+                                            {mode === 'open'
+                                                ? `Confirm Open Play (${selectedTimes.length} slots)`
+                                                : `Confirm Reservation — ${selectedTime || 'Select time'}`}
                                         </Button>
 
                                         <Button
@@ -498,17 +812,14 @@ const BookingSection = ({
                             </div>
                         </motion.div>
                     )}
-                </AnimatePresence>
-            </div>
+                    <div className="mb-4 text-sm font-medium text-black">
+                        {mode === 'day' && '₱300 per hour per court'}
 
-            <div className="fixed right-6 bottom-6 z-50">
-                <button
-                    onClick={() => setShowMyBookings(!showMyBookings)}
-                    className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#0e96b8] to-[#5acde7] px-5 py-3 text-white shadow-lg transition hover:from-[#0c84a0] hover:to-[#4fc3e0]"
-                >
-                    <Calendar className="h-5 w-5" />
-                    {showMyBookings ? 'Back to Courts' : 'My Bookings'}
-                </button>
+                        {mode === 'night' && '₱350 per hour per court'}
+
+                        {mode === 'open' && '₱200 per person'}
+                    </div>
+                </AnimatePresence>
             </div>
         </section>
     );
