@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Calendar } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
 
 interface Booking {
     id: number;
@@ -26,6 +27,9 @@ interface MyBookingsProps {
 }
 
 const MyBookings = ({ bookingStatus, setBookingStatus }: MyBookingsProps) => {
+    const { props } = usePage<any>();
+    const user = props.auth?.user;
+    const isAdmin = Boolean(user?.is_admin);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
     const [loading, setLoading] = useState(true);
@@ -80,13 +84,16 @@ const MyBookings = ({ bookingStatus, setBookingStatus }: MyBookingsProps) => {
         >
             <div className="mb-6 text-center">
                 <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl md:text-5xl">
-                    My{' '}
                     <span className="text-gradient bg-gradient-to-r from-[#0e96b8] to-[#5acde7] bg-clip-text text-transparent">
-                        Bookings
+                        {isAdmin ? <>List of Bookings</> : <>My Bookings</>}
                     </span>
                 </h2>
                 <p className="mt-2 text-gray-600">
-                    Review your court reservations and their status.
+                    {isAdmin ? (
+                        <>See list of pending, confirm, and cancel bookings.</>
+                    ) : (
+                        <>Review your court reservations and their status.</>
+                    )}
                 </p>
             </div>
             <div className="mb-4 flex items-center justify-end gap-2">

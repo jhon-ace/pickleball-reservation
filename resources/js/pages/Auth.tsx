@@ -219,11 +219,15 @@ const Auth = () => {
                         href="/"
                         className="inline-block text-2xl font-bold text-black"
                     >
-                        🏓 Picklora
+                        <img
+                            src="/storage/courts/logo.png"
+                            alt="Logo"
+                            className="h-auto w-58"
+                        />
                     </a>
                     <p className="text-sm text-gray-500">
                         {mode === 'signin' &&
-                            'Sign in to manage your reservations'}
+                            'Sign in to manage your court reservations'}
                         {mode === 'signup' &&
                             'Create an account to start booking'}
                         {mode === 'forgot' && "We'll send you a reset link"}

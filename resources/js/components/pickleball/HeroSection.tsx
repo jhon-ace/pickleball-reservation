@@ -3,9 +3,14 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock } from 'lucide-react';
 import heroImage from '../../../../public/assets/img/hero-courts.jpg';
+import { usePage } from '@inertiajs/react';
 
 const HeroSection = ({ onBookNow }: { onBookNow: () => void }) => {
     const [courtCount, setCourtCount] = useState(0);
+    const { auth } = usePage().props as any;
+    const { props } = usePage<any>();
+    const user = props.auth?.user;
+    const isAdmin = Boolean(user?.is_admin);
 
     useEffect(() => {
         fetch('/courts/count')
@@ -32,9 +37,15 @@ const HeroSection = ({ onBookNow }: { onBookNow: () => void }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.7 }}
                     >
-                        <span className="mt-10 inline-block rounded-full bg-yellow-500 px-4 py-1.5 text-sm font-medium text-black">
-                            🏓 Book Your Court Today
-                        </span>
+                        {isAdmin ? (
+                            <></>
+                        ) : (
+                            <>
+                                <span className="mt-10 inline-block rounded-full bg-yellow-500 px-4 py-1.5 text-sm font-medium text-black">
+                                    🏓 Book Your Court Today
+                                </span>
+                            </>
+                        )}
                     </motion.div>
 
                     <motion.h1
@@ -46,11 +57,17 @@ const HeroSection = ({ onBookNow }: { onBookNow: () => void }) => {
                     >
                         <br />
                         <span className="bg-gradient-to-r from-sky-400 via-blue-500 to-green-500 bg-clip-text text-4xl font-bold tracking-wider text-transparent sm:text-5xl md:text-6xl">
-                            Your Court.
-                            <br />
-                            Your Time.
-                            <br />
-                            Your Game.
+                            {isAdmin ? (
+                                <>Hello Administrator!</>
+                            ) : (
+                                <>
+                                    Your Court.
+                                    <br />
+                                    Your Time.
+                                    <br />
+                                    Your Game.
+                                </>
+                            )}
                         </span>
                     </motion.h1>
 
@@ -79,7 +96,9 @@ const HeroSection = ({ onBookNow }: { onBookNow: () => void }) => {
                             onClick={onBookNow}
                         >
                             <Calendar className="mr-2 h-5 w-5" />
-                            Book Now
+                            {isAdmin
+                                ? 'Book Reservation for Guest'
+                                : 'Book Now'}
                         </Button>
                         <Button
                             variant="outline"
@@ -88,7 +107,8 @@ const HeroSection = ({ onBookNow }: { onBookNow: () => void }) => {
                             onClick={onBookNow}
                         >
                             <MapPin className="mr-2 h-5 w-5" />
-                            View Courts
+
+                            {isAdmin ? 'View Slots' : 'View Courts'}
                         </Button>
                     </motion.div>
 

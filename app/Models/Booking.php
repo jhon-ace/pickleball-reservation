@@ -14,6 +14,7 @@ class Booking extends Model
         'user_id',
         'date',
         'time',
+        'time_id',
         'mode',
         'status',
         'is_pending'
