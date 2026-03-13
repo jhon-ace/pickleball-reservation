@@ -106,7 +106,7 @@ const HeroSection = ({ onBookNow }: { onBookNow: () => void }) => {
                             },
                             {
                                 icon: Clock,
-                                label: '6AM–10PM',
+                                label: '5 AM – 12AM',
                                 sub: 'Daily Hours',
                             },
                             {

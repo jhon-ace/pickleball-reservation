@@ -12,7 +12,6 @@ import { safeFetch } from '../../utils/safeFetch';
 type Time = {
     id: number;
     label: string;
-    start_time: string; // "05:00:00"
 };
 
 const BookingSection = ({
@@ -20,6 +19,7 @@ const BookingSection = ({
 }: {
     sectionRef: React.RefObject<HTMLDivElement>;
 }) => {
+    const [showModal, setShowModal] = useState(false);
     const [courts, setCourts] = useState<Court[]>([]);
     const [times, setTimes] = useState<Time[]>([]);
     const [loading, setLoading] = useState(true);
@@ -675,7 +675,7 @@ const BookingSection = ({
                                             .map((slot) => {
                                                 const isBooked =
                                                     bookedSlots.includes(
-                                                        slot.start_time,
+                                                        slot.label,
                                                     );
                                                 const isSelected =
                                                     mode === 'open'
@@ -684,34 +684,50 @@ const BookingSection = ({
                                                           )
                                                         : selectedTime ===
                                                           slot.label;
-
                                                 return (
                                                     <motion.button
                                                         key={slot.id}
+                                                        whileHover={
+                                                            !isBooked
+                                                                ? {
+                                                                      scale: 1.05,
+                                                                  }
+                                                                : {}
+                                                        }
+                                                        whileTap={
+                                                            !isBooked
+                                                                ? {
+                                                                      scale: 0.95,
+                                                                  }
+                                                                : {}
+                                                        }
                                                         disabled={isBooked}
                                                         onClick={() => {
-                                                            if (isBooked)
-                                                                return;
                                                             if (
                                                                 mode === 'open'
                                                             ) {
-                                                                setSelectedTimes(
-                                                                    (prev) =>
-                                                                        prev.includes(
+                                                                if (
+                                                                    selectedTimes.includes(
+                                                                        slot.label,
+                                                                    )
+                                                                ) {
+                                                                    setSelectedTimes(
+                                                                        selectedTimes.filter(
+                                                                            (
+                                                                                t,
+                                                                            ) =>
+                                                                                t !==
+                                                                                slot.label,
+                                                                        ),
+                                                                    );
+                                                                } else {
+                                                                    setSelectedTimes(
+                                                                        [
+                                                                            ...selectedTimes,
                                                                             slot.label,
-                                                                        )
-                                                                            ? prev.filter(
-                                                                                  (
-                                                                                      t,
-                                                                                  ) =>
-                                                                                      t !==
-                                                                                      slot.label,
-                                                                              )
-                                                                            : [
-                                                                                  ...prev,
-                                                                                  slot.label,
-                                                                              ],
-                                                                );
+                                                                        ],
+                                                                    );
+                                                                }
                                                             } else {
                                                                 setSelectedTime(
                                                                     slot.label,
@@ -720,17 +736,25 @@ const BookingSection = ({
                                                         }}
                                                         className={`flex flex-col items-center justify-center rounded-lg border px-2 py-3 text-sm font-medium transition-all duration-200 ${
                                                             isBooked
-                                                                ? 'cursor-not-allowed border-border bg-white text-red-500 line-through'
+                                                                ? 'cursor-not-allowed border-border bg-white text-red-500'
                                                                 : isSelected
                                                                   ? 'animate-pulse-glow border-transparent bg-blue-500 text-white shadow-lg'
                                                                   : 'cursor-pointer border-border bg-white text-black hover:border-black'
                                                         }`}
                                                     >
-                                                        <span className="font-semibold">
+                                                        <span
+                                                            className={`font-semibold ${isBooked ? 'line-through' : ''}`}
+                                                        >
                                                             {slot.label}
                                                         </span>
                                                         <span
-                                                            className={`text-xs ${isBooked ? 'text-red-500' : isSelected ? 'text-white' : 'text-green-600'}`}
+                                                            className={`text-xs ${
+                                                                isBooked
+                                                                    ? 'text-red-500'
+                                                                    : isSelected
+                                                                      ? 'text-white'
+                                                                      : 'text-green-600'
+                                                            }`}
                                                         >
                                                             {isBooked
                                                                 ? 'Taken'

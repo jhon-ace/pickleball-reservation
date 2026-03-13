@@ -44,7 +44,7 @@ const FeaturesSection = () => (
                 viewport={{ once: true }}
             >
                 <span className="mb-4 inline-block rounded-full bg-yellow-500 px-4 py-1.5 text-sm font-medium text-secondary-foreground">
-                    Why Picklora?
+                    Why AKW Picklers?
                 </span>
                 <h2 className="font-display text-3xl font-bold text-black sm:text-4xl md:text-5xl">
                     Everything You{' '}

@@ -53,7 +53,7 @@ const Map = () => (
                     >
                         <div>
                             <h3 className="font-display mb-4 text-xl font-bold tracking-wider text-black">
-                                Picklora Court
+                                AKW Picklers Court
                             </h3>
                             <ul className="space-y-4 text-sm">
                                 <li className="flex items-start gap-3">
@@ -77,8 +77,7 @@ const Map = () => (
                                 <li className="flex items-start gap-3">
                                     <Clock className="mt-0.5 h-5 w-5 shrink-0 text-gray-500" />
                                     <div className="tracking-wider text-gray-500">
-                                        <p>Mon–Fri: 6AM – 10PM</p>
-                                        <p>Sat–Sun: 7AM – 9PM</p>
+                                        <p>Mon–Sun: 5AM – 12AM</p>
                                     </div>
                                 </li>
                             </ul>

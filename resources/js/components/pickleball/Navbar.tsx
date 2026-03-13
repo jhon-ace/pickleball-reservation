@@ -42,7 +42,16 @@ const Navbar = ({ onBookNow, setShowModal, auth }: NavbarProps) => {
                 </Link>
             );
         }
+        const blinkStyle = `
+                @keyframes blink {
+                    0%, 50%, 100% { opacity: 1; }
+                    25%, 75% { opacity: 0; }
+                }
 
+                .animate-blink {
+                    animation: blink 1s infinite;
+                }
+                `;
         return (
             <div className="flex items-center gap-3">
                 {!isAdmin && (
@@ -78,10 +87,15 @@ const Navbar = ({ onBookNow, setShowModal, auth }: NavbarProps) => {
                 <div className="flex h-16 items-center justify-between py-4">
                     <a
                         href="/"
-                        className="font-display flex flex-col items-start gap-1 text-foreground md:flex-row md:items-center md:gap-2"
+                        className="group flex flex-row items-center gap-2 p-2 sm:gap-3 md:gap-3"
                     >
-                        <span className="text-gradient tracking-wider text-black sm:text-base md:text-lg lg:text-lg">
-                            🏓 Picklora: Pickleball Court Reservation System
+                        <img
+                            src="/storage/courts/logo.png"
+                            alt="Logo"
+                            className="h-auto w-16"
+                        />
+                        <span className="font-display font-bold text-black group-hover:drop-shadow-lg sm:text-base md:text-lg lg:text-xl">
+                            AKW Picklers
                         </span>
                     </a>
 

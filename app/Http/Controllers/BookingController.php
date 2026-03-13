@@ -83,6 +83,20 @@ class BookingController extends Controller
         ]);
     }
 
+    // public function slots(Request $request)
+    // {
+    //     $request->validate([
+    //         'court_id' => 'required|exists:courts,id',
+    //         'date' => 'required|date',
+    //     ]);
+
+    //     $booked = Booking::where('court_id', $request->court_id)
+    //         ->where('date', $request->date)
+    //         ->pluck('time');
+
+    //     return response()->json($booked);
+    // }
+
     public function slots(Request $request)
     {
         $request->validate([
@@ -90,9 +104,10 @@ class BookingController extends Controller
             'date' => 'required|date',
         ]);
 
+        // Fetch all booked times for this court and date
         $booked = Booking::where('court_id', $request->court_id)
             ->where('date', $request->date)
-            ->pluck('time');
+            ->pluck('time'); // 05:00:00, 06:00:00 ...
 
         return response()->json($booked);
     }

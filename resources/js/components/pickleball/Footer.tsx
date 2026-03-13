@@ -5,12 +5,12 @@ const Footer = () => (
                 <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
                     {/* Left */}
                     <p className="font-display text-lg font-bold tracking-wider text-black">
-                        🏓 Picklora
+                        🏓 AKW Picklers
                     </p>
 
                     {/* Center */}
                     <p className="bg-clip-text text-sm text-[#0e96b8]">
-                        © 2026 Picklora. All rights reserved.
+                        © 2026 AKW Picklers. All rights reserved.
                     </p>
 
                     {/* Right */}

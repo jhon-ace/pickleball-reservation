@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, Wifi, Sun, Warehouse } from 'lucide-react';
+import heroImage from '../../../../public/assets/img/hero-courts.jpg';
 
 export interface Court {
     id: number;
@@ -38,11 +39,7 @@ const CourtCard = ({
         >
             <div className="relative h-48 overflow-hidden">
                 <img
-                    src={
-                        court.image
-                            ? `/storage/${court.image}`
-                            : '/assets/img/default-court.jpg'
-                    }
+                    src={heroImage}
                     alt={court.name}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
